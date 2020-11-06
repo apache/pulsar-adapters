@@ -43,6 +43,12 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 25
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Clone Pulsar
         uses: actions/checkout@v2
         with:
@@ -50,12 +56,6 @@ jobs:
           repository: apache/pulsar
           ref: master
           path: pulsar
-        
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 25
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
