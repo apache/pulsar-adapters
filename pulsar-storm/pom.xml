@@ -52,14 +52,14 @@
       <version>${storm.version}</version>
       <scope>provided</scope>
       <exclusions>
-      	<exclusion>
-      		<groupId>ch.qos.logback</groupId>
-      		<artifactId>logback-classic</artifactId>
-      	</exclusion>
-      	<exclusion>
-      		<groupId>org.slf4j</groupId>
-      		<artifactId>log4j-over-slf4j</artifactId>
-      	</exclusion>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -72,5 +72,27 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+    <!--
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>check-style</id>
+            <phase>verify</phase>
+            <configuration>
+              <configLocation>../buildtools/src/main/resources/pulsar/checkstyle.xml</configLocation>
+              <suppressionsLocation>../buildtools/src/main/resources/pulsar/suppressions.xml</suppressionsLocation>
+              <encoding>UTF-8</encoding>
+            </configuration>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    -->
   </build>
 </project>
