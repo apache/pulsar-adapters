@@ -75,13 +75,11 @@ jobs:
         with:
           maven-version: 3.6.1
 
-      - name: Build pulsar
+      - name: Build pulsar adapters
         run: |
           cd pulsar
           mvn -B -DskipTests -Dcheckstyle.skip -am -pl pulsar-broker install
-
-      - name: Build pulsar adapters
-        run: |
+          cd ..
           mvn clean license:check install
 
       - name: package surefire artifacts
