@@ -86,6 +86,8 @@
     <module>pulsar-spark</module>
     <module>pulsar-client-kafka-compat</module>
     <module>pulsar-log4j2-appender</module>
+    <module>examples</module>
+    <module>tests</module>
   </modules>
 
   <dependencyManagement>
