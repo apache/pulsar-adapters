@@ -79,7 +79,7 @@ jobs:
       - name: Build pulsar
         run: |
           cd pulsar
-          mvn -B -DskipTests -Dcheckstyle.skip -am -pl pulsar-broker install
+          mvn -B -DskipTests -Dcheckstyle.skip -am -pl pulsar-broker,pulsar-client-all install
 
       - name: Build pulsar adapters
         run: |
