@@ -35,6 +35,9 @@ import org.apache.spark.streaming.receiver.Receiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A spark streaming receiver for pulsar.
+ */
 public class SparkStreamingPulsarReceiver extends Receiver<byte[]> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SparkStreamingPulsarReceiver.class);

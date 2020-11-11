@@ -43,6 +43,13 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 25
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: adapters
+
       - name: Clone Pulsar
         uses: actions/checkout@v2
         with:
@@ -50,12 +57,6 @@ jobs:
           repository: apache/pulsar
           ref: master
           path: pulsar
-        
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 25
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
@@ -78,15 +79,17 @@ jobs:
       - name: Build pulsar
         run: |
           cd pulsar
-          mvn -q -B -DskipTests -am -pl pulsar-broker install
+          mvn -B -DskipTests -Dcheckstyle.skip install
 
       - name: Build pulsar adapters
         run: |
+          cd adapters
           mvn clean license:check install
 
       - name: package surefire artifacts
         if: failure()
         run: |
+          cd adapters
           rm -rf artifacts
           mkdir artifacts
           find . -type d -name "*surefire*" -exec cp --parents -R {} artifacts/ \;
@@ -97,4 +100,4 @@ jobs:
         if: failure()
         with:
           name: surefire-artifacts
-          path: artifacts.zip
+          path: adapters/artifacts.zip

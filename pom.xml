@@ -76,6 +76,8 @@
   </issueManagement>
 
   <properties>
+    <flink.version>1.6.0</flink.version>
+    <storm.version>2.0.0</storm.version>
   </properties>
 
   <modules>
