@@ -30,6 +30,7 @@ import org.apache.flink.streaming.api.operators.StreamSource;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.util.AbstractStreamOperatorTestHarness;
+import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerStats;
 import org.apache.pulsar.client.api.Message;
@@ -388,6 +389,12 @@ public class PulsarConsumerSourceTests {
         }
 
         @Override
+        public long getLastDisconnectedTimestamp() {
+            return 0L;
+        }
+
+
+        @Override
         public CompletableFuture<Void> unsubscribeAsync() {
             return null;
         }
@@ -475,6 +482,11 @@ public class PulsarConsumerSourceTests {
         }
 
         @Override
+        public CompletableFuture<Void> acknowledgeCumulativeAsync(MessageId messageId, Transaction transaction) {
+            return null;
+        }
+
+        @Override
         public CompletableFuture<Void> acknowledgeAsync(Message<?> message) {
             return null;
         }
@@ -483,6 +495,11 @@ public class PulsarConsumerSourceTests {
         public CompletableFuture<Void> acknowledgeAsync(MessageId messageId) {
             acknowledgedIds.put(messageId, messageId);
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Void> acknowledgeAsync(MessageId messageId, Transaction transaction) {
+            return null;
         }
 
         @Override

@@ -43,62 +43,64 @@
   <dependencies>
 
      <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-common</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>testmocks</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-client</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-client-admin</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>bouncy-castle-bc</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <classifier>pkg</classifier>
     </dependency>
 
     <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
     </dependency>
 
     <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
 
     <dependency>
@@ -117,6 +119,14 @@
         <exclusion>
           <groupId>org.xerial.snappy</groupId>
           <artifactId>snappy-java</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

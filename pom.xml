@@ -24,9 +24,9 @@
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
   <parent>
-    <groupId>org.apache.pulsar</groupId>
-    <artifactId>pulsar</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>23</version>
   </parent>
 
   <groupId>org.apache.pulsar</groupId>
@@ -76,8 +76,75 @@
   </issueManagement>
 
   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+
+    <!--config keys to congiure test selection -->
+    <include>*</include>
+    <exclude/>
+    <groups/>
+    <excludedGroups/>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+    <test.additional.args></test.additional.args>
+    <testReuseFork>true</testReuseFork>
+    <testForkCount>4</testForkCount>
+    <testRealAWS>false</testRealAWS>
+    <testRetryCount>1</testRetryCount>
+    <docker.organization>apachepulsar</docker.organization>
+    <skipSourceReleaseAssembly>false</skipSourceReleaseAssembly>
+    <skipBuildDistribution>false</skipBuildDistribution>
+
+    <pulsar.version>2.7.1</pulsar.version>
     <flink.version>1.6.0</flink.version>
     <storm.version>2.0.0</storm.version>
+    <kafka-client.version>2.3.0</kafka-client.version>
+    <log4j2.version>2.14.0</log4j2.version>
+    <spark-streaming_2.10.version>2.1.0</spark-streaming_2.10.version>
+
+    <slf4j.version>1.7.25</slf4j.version>
+    <guava.version>30.1-jre</guava.version>
+    <mockito.version>3.8.0</mockito.version>
+    <powermock.version>2.0.9</powermock.version>
+    <scala.binary.version>2.11</scala.binary.version>
+    <scala-library.version>2.11.12</scala-library.version>
+    <avro.version>1.10.2</avro.version>
+    <disruptor.version>3.4.0</disruptor.version>
+    <commons-lang3.version>3.11</commons-lang3.version>
+    <jcommander.version>1.78</jcommander.version>
+    <testcontainers.version>1.15.1</testcontainers.version>
+    <asynchttpclient.version>2.12.1</asynchttpclient.version>
+    <testng.version>7.3.0</testng.version>
+    <lombok.version>1.18.18</lombok.version>
+
+    <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+    <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+    <aspectj-maven-plugin.version>1.11.1</aspectj-maven-plugin.version>
+    <license-maven-plugin.version>4.0.rc2</license-maven-plugin.version>
+    <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
+    <maven-enforcer-plugin.version>3.0.0-M3</maven-enforcer-plugin.version>
+    <surefire.version>3.0.0-M3</surefire.version>
+    <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
+    <maven-shade-plugin>3.2.4</maven-shade-plugin>
+    <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
+    <nifi-nar-maven-plugin.version>1.2.0</nifi-nar-maven-plugin.version>
+    <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+    <git-commit-id-plugin.version>4.0.2</git-commit-id-plugin.version>
+    <wagon-ssh-external.version>3.4.3</wagon-ssh-external.version>
+    <os-maven-plugin.version>1.4.1.Final</os-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.6</jacoco-maven-plugin.version>
+    <spotbugs-maven-plugin.version>4.2.2</spotbugs-maven-plugin.version>
+    <spotbugs.version>4.2.2</spotbugs.version>
+    <errorprone.version>2.5.1</errorprone.version>
+    <errorprone.javac.version>9+181-r4173-1</errorprone.javac.version>
+    <errorprone-slf4j.version>0.1.4</errorprone-slf4j.version>
+    <lightproto-maven-plugin.version>0.2</lightproto-maven-plugin.version>
+
+    <!-- Used to configure rename.netty.native. Libs -->
+    <rename.netty.native.libs>rename-netty-native-libs.sh</rename.netty.native.libs>
   </properties>
 
   <modules>
@@ -94,12 +161,514 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.pulsar</groupId>
+            <artifactId>buildtools</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <showDeprecation>true</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <optimize>true</optimize>
+          <!-- workaround https://issues.apache.org/jira/browse/MCOMPILER-205 -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
+          <compilerArgs>
+            <arg>-parameters</arg>
+            <!-- enable 'all' lint warnings with some exclusions -->
+            <arg>-Xlint:all</arg>
+            <arg>-Xlint:-options</arg>
+            <arg>-Xlint:-serial</arg>
+            <arg>-Xlint:-classfile</arg>
+            <arg>-Xlint:-processing</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine> -Xmx1G -XX:+UseG1GC
+            -Dpulsar.allocator.pooled=false
+            -Dpulsar.allocator.leak_detection=Advanced
+            -Dpulsar.allocator.exit_on_oom=false
+            ${test.additional.args}
+          </argLine>
+          <reuseForks>${testReuseFork}</reuseForks>
+          <forkCount>${testForkCount}</forkCount>
+          <shutdown>kill</shutdown>
+          <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+          <trimStackTrace>false</trimStackTrace>
+          <properties>
+            <property>
+              <name>testRealAWS</name>
+              <value>${testRealAWS}</value>
+            </property>
+            <property>
+              <name>testRetryCount</name>
+              <value>${testRetryCount}</value>
+            </property>
+            <property>
+              <name>listener</name>
+              <value>org.apache.pulsar.tests.PulsarTestListener,org.apache.pulsar.tests.AnnotationListener</value>
+            </property>
+          </properties>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.commonjava.maven.plugins</groupId>
+        <artifactId>directory-maven-plugin</artifactId>
+        <version>${directory-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>directories</id>
+            <goals>
+              <goal>directory-of</goal>
+            </goals>
+            <phase>initialize</phase>
+            <configuration>
+              <property>pulsar.basedir</property>
+              <project>
+                <groupId>org.apache.pulsar</groupId>
+                <artifactId>pulsar-adapters</artifactId>
+              </project>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${license-maven-plugin.version}</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <header>${pulsar.basedir}/src/license-header.txt</header>
+              <excludes>
+                <exclude>LICENSE</exclude>
+                <exclude>NOTICE</exclude>
+                <exclude>**/*.txt</exclude>
+                <exclude>**/*.pem</exclude>
+                <exclude>**/*.crt</exclude>
+                <exclude>**/*.key</exclude>
+                <exclude>**/*.csr</exclude>
+                <exclude>**/*.log</exclude>
+                <exclude>**/*.patch</exclude>
+                <exclude>**/*.avsc</exclude>
+                <exclude>**/*.versionsBackup</exclude>
+                <exclude>**/*.pyc</exclude>
+                <exclude>**/*.graffle</exclude>
+                <exclude>**/*.hgrm</exclude>
+                <exclude>**/src/main/java/org/apache/bookkeeper/mledger/proto/MLDataFormats.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/transaction/coordinator/proto/PulsarTransactionMetadata.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/broker/service/schema/proto/SchemaRegistryFormat.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/common/api/proto/*.java</exclude>
+                <exclude>**/src/test/java/org/apache/pulsar/common/api/proto/*.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/io/kinesis/fbs/CompressionType.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/io/kinesis/fbs/EncryptionCtx.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/io/kinesis/fbs/EncryptionKey.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/io/kinesis/fbs/KeyValue.java</exclude>
+                <exclude>**/src/main/java/org/apache/pulsar/io/kinesis/fbs/Message.java</exclude>
+                <exclude>**/src/main/java/org/apache/bookkeeper/mledger/util/AbstractCASReferenceCounted.java</exclude>
+                <exclude>**/ByteBufCodedInputStream.java</exclude>
+                <exclude>**/ByteBufCodedOutputStream.java</exclude>
+                <exclude>**/ahc.properties</exclude>
+                <exclude>bin/proto/*</exclude>
+                <exclude>conf/schema_example.conf</exclude>
+                <exclude>data/**</exclude>
+                <exclude>logs/**</exclude>
+                <exclude>**/circe/**</exclude>
+                <exclude>pulsar-broker/src/test/resources/authentication/basic/.htpasswd</exclude>
+                <exclude>pulsar-client-cpp/lib/checksum/int_types.h</exclude>
+                <exclude>pulsar-client-cpp/lib/checksum/gf2.hpp</exclude>
+                <exclude>pulsar-client-cpp/lib/checksum/crc32c_sse42.cc</exclude>
+                <exclude>pulsar-client-cpp/lib/checksum/crc32c_sse42.h</exclude>
+                <exclude>pulsar-client-cpp/lib/checksum/crc32c_sw.cc</exclude>
+                <exclude>pulsar-client-cpp/lib/lz4/lz4.*</exclude>
+                <exclude>pulsar-client-cpp/lib/PulsarApi.pb.*</exclude>
+                <exclude>pulsar-client-cpp/CMakeFiles/**</exclude>
+                <exclude>pulsar-client-cpp/**/Makefile</exclude>
+                <exclude>pulsar-client-cpp/**/cmake_install.cmake</exclude>
+                <exclude>**/CMakeFiles/**</exclude>
+                <exclude>**/django/stats/migrations/*.py</exclude>
+                <exclude>site2/**</exclude>
+                <exclude>generated-site/**</exclude>
+                <exclude>.github/*.md</exclude>
+                <exclude>**/.idea/**</exclude>
+                <exclude>**/generated/**</exclude>
+                <exclude>**/zk-3.5-test-data/*</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+          <mapping>
+            <java>JAVADOC_STYLE</java>
+            <proto>JAVADOC_STYLE</proto>
+            <go>DOUBLESLASH_STYLE</go>
+            <conf>SCRIPT_STYLE</conf>
+            <ini>SCRIPT_STYLE</ini>
+            <yaml>SCRIPT_STYLE</yaml>
+            <tf>SCRIPT_STYLE</tf>
+            <cfg>SCRIPT_STYLE</cfg>
+            <Makefile>SCRIPT_STYLE</Makefile>
+            <service>SCRIPT_STYLE</service>
+            <cc>JAVADOC_STYLE</cc>
+            <md>XML_STYLE</md>
+            <txt>SCRIPT_STYLE</txt>
+            <scss>JAVADOC_STYLE</scss>
+            <Doxyfile>SCRIPT_STYLE</Doxyfile>
+            <pulsar>SCRIPT_STYLE</pulsar>
+            <pulsar-managed-ledger-admin>SCRIPT_STYLE</pulsar-managed-ledger-admin>
+            <pulsar-daemon>SCRIPT_STYLE</pulsar-daemon>
+            <pulsar-admin>SCRIPT_STYLE</pulsar-admin>
+            <pulsar-perf>SCRIPT_STYLE</pulsar-perf>
+            <pulsar-client>SCRIPT_STYLE</pulsar-client>
+            <bookkeeper>SCRIPT_STYLE</bookkeeper>
+            <tfvars>SCRIPT_STYLE</tfvars>
+          </mapping>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <!-- Other license files -->
+            <exclude>licenses/LICENSE-*.txt</exclude>
+            <exclude>pulsar-client-cpp/pkg/licenses/LICENSE-*.txt</exclude>
+            <exclude>src/assemble/README.bin.txt</exclude>
+            <exclude>src/assemble/LICENSE.bin.txt</exclude>
+            <exclude>src/assemble/NOTICE.bin.txt</exclude>
+
+            <!-- These files are generated automatically by the Protobuf compiler
+                 and are included in source tree for convenience -->
+            <exclude>src/main/java/org/apache/bookkeeper/mledger/proto/MLDataFormats.java</exclude>
+            <exclude>src/main/java/org/apache/pulsar/broker/service/schema/proto/SchemaRegistryFormat.java</exclude>
+            <exclude>bin/proto/MLDataFormats_pb2.py</exclude>
+
+            <!-- These files are generated automatically by the Avro compiler
+                 and are included in source tree for convenience -->
+            <exclude>**/avro/generated/*.java</exclude>
+
+            <!-- Avro schema definitions - JSON format -->
+            <exclude>**/*.avsc</exclude>
+
+            <!-- pulasr-io-connector kinesis : auto generated files from flatbuffer schema -->
+            <exclude>src/main/java/org/apache/pulsar/io/kinesis/fbs/CompressionType.java</exclude>
+            <exclude>src/main/java/org/apache/pulsar/io/kinesis/fbs/EncryptionCtx.java</exclude>
+            <exclude>src/main/java/org/apache/pulsar/io/kinesis/fbs/EncryptionKey.java</exclude>
+            <exclude>src/main/java/org/apache/pulsar/io/kinesis/fbs/KeyValue.java</exclude>
+            <exclude>src/main/java/org/apache/pulsar/io/kinesis/fbs/Message.java</exclude>
+
+            <!-- Imported from Netty - Apache License v2 -->
+            <exclude>src/main/java/org/apache/bookkeeper/mledger/util/AbstractCASReferenceCounted.java</exclude>
+
+            <!-- This is generated during maven build -->
+            <exclude>dependency-reduced-pom.xml</exclude>
+
+            <!-- LZ4 code is under BSD 2-clause  -->
+            <exclude>pulsar-client-cpp/lib/lz4/lz4.*</exclude>
+
+            <!-- These files is go module configs -->
+            <exclude>pulsar-client-go/go.mod</exclude>
+            <exclude>pulsar-client-go/go.sum</exclude>
+            <exclude>pulsar-function-go/go.mod</exclude>
+            <exclude>pulsar-function-go/go.sum</exclude>
+            <exclude>pulsar-function-go/examples/go.mod</exclude>
+            <exclude>pulsar-function-go/examples/go.sum</exclude>
+
+            <!-- This file is using ZLib license -->
+            <exclude>pulsar-client-cpp/lib/checksum/crc32c_sw.cc</exclude>
+
+            <!-- This file is generated by c++ client -->
+            <exclude>pulsar-client-cpp/generated/**</exclude>
+            <!-- This is a text property file that contains just a class name -->
+            <exclude>**/META-INF/services/com.scurrilous.circe.HashProvider</exclude>
+            <exclude>**/META-INF/services/io.prestosql.spi.Plugin</exclude>
+
+            <!-- Django generated code -->
+            <exclude>**/django/stats/migrations/*.py</exclude>
+            <exclude>**/conf/uwsgi_params</exclude>
+
+            <!-- Exclude certificates used for tests -->
+            <exclude>**/*.crt</exclude>
+            <exclude>**/*.key</exclude>
+            <exclude>**/*.csr</exclude>
+            <exclude>**/*.pem</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>**/*.htpasswd</exclude>
+            <exclude>src/test/resources/athenz.conf.test</exclude>
+            <exclude>deployment/terraform-ansible/templates/myid</exclude>
+            <exclude>certificate-authority/index.txt</exclude>
+            <exclude>certificate-authority/serial</exclude>
+            <exclude>certificate-authority/README.md</exclude>
+
+            <!-- Exclude ZK test data file -->
+            <exclude>**/zk-3.5-test-data/*</exclude>
+
+            <!-- Python requirements files -->
+            <exclude>**/requirements.txt</exclude>
+
+            <!-- Configuration Templates -->
+            <exclude>conf/schema_example.conf</exclude>
+            <exclude>**/templates/*.tpl</exclude>
+
+            <!-- helm files -->
+            <exclude>**/.helmignore</exclude>
+            <exclude>**/_helpers.tpl</exclude>
+
+            <!-- project ignored files -->
+            <exclude>*.md</exclude>
+            <exclude>.github/**</exclude>
+            <exclude>**/*.nar</exclude>
+            <exclude>**/.terraform/**</exclude>
+            <exclude>**/.gitignore</exclude>
+            <exclude>**/.svn</exclude>
+            <exclude>**/*.iws</exclude>
+            <exclude>**/*.ipr</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/*.cbp</exclude>
+            <exclude>**/*.pyc</exclude>
+            <exclude>**/.classpath</exclude>
+            <exclude>**/.project</exclude>
+            <exclude>**/.settings</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/CMakeFiles/**</exclude>
+            <exclude>**/CMakeCache.txt</exclude>
+            <exclude>**/cmake_install.cmake</exclude>
+            <exclude>pulsar-client-cpp/**/Makefile</exclude>
+            <exclude>pulsar-client-cpp/tests/main</exclude>
+            <exclude>pulsar-client-cpp/examples/SampleAsyncProducer</exclude>
+            <exclude>pulsar-client-cpp/examples/SampleConsumer</exclude>
+            <exclude>pulsar-client-cpp/examples/SampleConsumerListener</exclude>
+            <exclude>pulsar-client-cpp/examples/SampleProducer</exclude>
+            <exclude>pulsar-client-cpp/perf/perfProducer</exclude>
+            <exclude>pulsar-client-cpp/perf/perfConsumer</exclude>
+            <exclude>**/python/dist/**</exclude>
+            <exclude>**/pulsar-client-cpp/pkg/rpm/RPMS/**</exclude>
+            <exclude>**/pulsar-client-cpp/pkg/rpm/SOURCES/**</exclude>
+            <exclude>**/pulsar-client-cpp/pkg/deb/BUILD/**</exclude>
+            <exclude>**/python/wheelhouse/**</exclude>
+            <exclude>**/python/MANIFEST</exclude>
+            <exclude>**/*.egg-info/**</exclude>
+            <exclude>**/*.log</exclude>
+            <exclude>**/build/**</exclude>
+            <exclude>**/file:/**</exclude>
+            <exclude>**/SecurityAuth.audit*</exclude>
+            <exclude>**/site2/**</exclude>
+            <exclude>**/.idea/**</exclude>
+            <exclude>**/*.a</exclude>
+            <exclude>**/*.so</exclude>
+            <exclude>**/*.so.*</exclude>
+            <exclude>**/*.dylib</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-maven</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[1.8.0,)</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>${maven-assembly-plugin.version}</version>
+        <inherited>false</inherited>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.apache.resources</groupId>
+            <artifactId>apache-source-release-assembly-descriptor</artifactId>
+            <version>1.0.6</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>source-release-assembly-tar-gz</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <skipAssembly>${skipSourceReleaseAssembly}</skipAssembly>
+              <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+              <descriptorRefs>
+                <!-- defined in Apache Parent Pom -->
+                <descriptorRef>${sourceReleaseAssemblyDescriptor}</descriptorRef>
+              </descriptorRefs>
+              <finalName>apache-pulsar-${project.version}-src</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <formats>
+                <format>tar.gz</format>
+              </formats>
+              <tarLongFileMode>posix</tarLongFileMode>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <includes>
+              <include>${include}</include>
+            </includes>
+            <excludes>
+              <exclude>**/*$*,${exclude}</exclude>
+            </excludes>
+            <groups>${groups}</groups>
+            <excludedGroups>${excludedGroups}</excludedGroups>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <doclint>none</doclint>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.nifi</groupId>
+          <artifactId>nifi-nar-maven-plugin</artifactId>
+          <version>${nifi-nar-maven-plugin.version}</version>
+          <extensions>true</extensions>
+          <configuration>
+            <finalName>${project.artifactId}-${project.version}</finalName>
+          </configuration>
+          <executions>
+            <execution>
+              <id>default-nar</id>
+              <phase>package</phase>
+              <goals>
+                <goal>nar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <version>${git-commit-id-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>${spotbugs-maven-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.github.spotbugs</groupId>
+              <artifactId>spotbugs</artifactId>
+              <version>${spotbugs.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>${wagon-ssh-external.version}</version>
+      </extension>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
+      </extension>
+    </extensions>
   </build>
 
   <profiles>
+  <profile>
+    <id>jdk11-tests</id>
+    <activation>
+      <jdk>[11,)</jdk>
+    </activation>
+    <properties>
+      <test.additional.args> --add-opens java.base/jdk.internal.loader=ALL-UNNAMED </test.additional.args>
+    </properties>
+  </profile>
+
     <profile>
       <id>windows</id>
       <activation>

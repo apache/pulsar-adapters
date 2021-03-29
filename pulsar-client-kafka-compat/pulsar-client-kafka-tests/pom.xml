@@ -44,32 +44,32 @@
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>bouncy-castle-bc</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <classifier>pkg</classifier>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.apache.pulsar</groupId>
       <artifactId>testmocks</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
