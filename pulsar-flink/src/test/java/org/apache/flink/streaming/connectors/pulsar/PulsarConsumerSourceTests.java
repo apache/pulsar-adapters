@@ -40,7 +40,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.MessageImpl;
-import org.apache.pulsar.common.api.proto.PulsarApi;
+import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -639,7 +639,7 @@ public class PulsarConsumerSourceTests {
 
     private static Message<byte[]> createMessage(String content, String messageId) {
         return new MessageImpl<byte[]>("my-topic", messageId, Collections.emptyMap(),
-                                       content.getBytes(), Schema.BYTES, PulsarApi.MessageMetadata.newBuilder());
+                                       content.getBytes(), Schema.BYTES, new MessageMetadata());
     }
 
     private static String createMessageId(long ledgerId, long entryId, long partitionIndex) {

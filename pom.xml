@@ -32,7 +32,7 @@
   <groupId>org.apache.pulsar</groupId>
   <artifactId>pulsar-adapters</artifactId>
 
-  <version>2.7.0-SNAPSHOT</version>
+  <version>2.8.0-SNAPSHOT</version>
 
   <name>Pulsar Adapters</name>
   <description>A collections of Pulsar adapters.</description>
@@ -97,11 +97,12 @@
     <skipSourceReleaseAssembly>false</skipSourceReleaseAssembly>
     <skipBuildDistribution>false</skipBuildDistribution>
 
-    <pulsar.version>2.7.1</pulsar.version>
-    <flink.version>1.6.0</flink.version>
+    <pulsar.version>2.8.0-SNAPSHOT</pulsar.version>
+    <flink.version>1.7.2</flink.version>
     <storm.version>2.0.0</storm.version>
     <kafka-client.version>2.3.0</kafka-client.version>
     <log4j2.version>2.14.0</log4j2.version>
+    <log4j.version>1.2.17</log4j.version>
     <spark-streaming_2.10.version>2.1.0</spark-streaming_2.10.version>
 
     <slf4j.version>1.7.25</slf4j.version>
@@ -118,6 +119,9 @@
     <asynchttpclient.version>2.12.1</asynchttpclient.version>
     <testng.version>7.3.0</testng.version>
     <lombok.version>1.18.18</lombok.version>
+    <jackson.version>2.11.1</jackson.version>
+    <jackson.databind.version>2.11.1</jackson.databind.version>
+    <jetty.version>9.4.35.v20201120</jetty.version>
 
     <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
@@ -167,6 +171,18 @@
       <version>${lombok.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>buildtools</artifactId>
+      <version>${pulsar.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -208,6 +224,8 @@
             <arg>-Xlint:-classfile</arg>
             <arg>-Xlint:-processing</arg>
           </compilerArgs>
+          <!-- workaround for CompilerException: NullPointerException -->
+          <forceJavacCompilerUse>true</forceJavacCompilerUse>
         </configuration>
       </plugin>
       <plugin>

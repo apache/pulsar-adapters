@@ -45,7 +45,7 @@ import org.apache.pulsar.client.api.ProducerInterceptor;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
-import org.apache.pulsar.common.api.proto.PulsarApi;
+import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +137,7 @@ public class KafkaProducerInterceptorWrapper<K, V> implements ProducerIntercepto
     @Override
     public void onSendAcknowledgement(Producer<byte[]> producer, Message<byte[]> message, MessageId msgId, Throwable exception) {
         try {
-            PulsarApi.MessageMetadata.Builder messageMetadataBuilder = ((MessageImpl<byte[]>)message).getMessageBuilder();
+            MessageMetadata messageMetadataBuilder = ((MessageImpl<byte[]>)message).getMessageBuilder();
             partitionID = getPartitionID(messageMetadataBuilder);
             TopicPartition topicPartition = new TopicPartition(topic, Integer.parseInt(partitionID));
             kafkaProducerInterceptor.onAcknowledgement(new RecordMetadata(topicPartition,
@@ -191,7 +191,7 @@ public class KafkaProducerInterceptorWrapper<K, V> implements ProducerIntercepto
         }
         try {
             scheme = (Schema<byte[]>) FieldUtils.readField(message, "schema", true);
-            PulsarApi.MessageMetadata.Builder messageMetadataBuilder = ((MessageImpl<byte[]>)message).getMessageBuilder();
+            MessageMetadata messageMetadataBuilder = ((MessageImpl<byte[]>)message).getMessageBuilder();
             partitionID = getPartitionID(messageMetadataBuilder);
             eventTime = message.getEventTime();
             return new ProducerRecord<>(topic, Integer.parseInt(partitionID), eventTime, deserializeKey(topic, message.getKey()), value);
@@ -239,7 +239,7 @@ public class KafkaProducerInterceptorWrapper<K, V> implements ProducerIntercepto
      * @param messageMetadataBuilder
      * @return PartitionID
      */
-    private String getPartitionID(PulsarApi.MessageMetadata.Builder messageMetadataBuilder) {
+    private String getPartitionID(MessageMetadata messageMetadataBuilder) {
         return messageMetadataBuilder.getPropertiesList()
                                     .stream()
                                     .filter(keyValue -> keyValue.getKey().equals(KafkaMessageRouter.PARTITION_ID))
