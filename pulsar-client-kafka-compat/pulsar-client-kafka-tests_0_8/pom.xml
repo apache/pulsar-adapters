@@ -46,14 +46,12 @@
     <dependency>
       <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.pulsar</groupId>
       <artifactId>bouncy-castle-bc</artifactId>
-      <version>${pulsar.version}</version>
       <classifier>pkg</classifier>
       <scope>test</scope>
     </dependency>
@@ -61,7 +59,6 @@
     <dependency>
       <groupId>org.apache.pulsar</groupId>
       <artifactId>pulsar-broker</artifactId>
-      <version>${pulsar.version}</version>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
@@ -69,21 +66,18 @@
     <dependency>
       <groupId>org.apache.pulsar</groupId>
       <artifactId>testmocks</artifactId>
-      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
-      <version>${jcommander.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <artifactId>log4j</artifactId>
       <groupId>log4j</groupId>
-      <version>${log4j.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.sun.jmx</groupId>

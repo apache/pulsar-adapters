@@ -37,10 +37,6 @@
   <description>Drop-in replacement for Kafka client library that publishes and consumes
   messages on Pulsar topics</description>
 
-  <properties>
-     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
