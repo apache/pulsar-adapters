@@ -79,7 +79,7 @@
                   <include>com.typesafe.netty:netty-reactive-streams</include>
                   <include>org.javassist:javassist</include>
                   <include>com.google.protobuf:protobuf-java</include>
-                  <include>com.google.guava:guava</include>
+                  <include>com.google.guava:*</include>
                   <include>com.google.code.gson:gson</include>
                   <include>com.fasterxml.jackson.core</include>
                   <include>com.fasterxml.jackson.module</include>
@@ -128,6 +128,22 @@
                 <relocation>
                   <pattern>org.apache.kafka.clients.consumer.PulsarKafkaConsumer</pattern>
                   <shadedPattern>org.apache.kafka.clients.consumer.KafkaConsumer</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.kafka.clients.admin.KafkaAdminClient</pattern>
+                  <shadedPattern>org.apache.kafka.clients.admin.OriginalKafkaAdminClient</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.kafka.clients.admin.PulsarKafkaAdminClient</pattern>
+                  <shadedPattern>org.apache.kafka.clients.admin.KafkaAdminClient</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.kafka.clients.admin.Admin.class</pattern>
+                  <shadedPattern>org.apache.kafka.clients.admin.OriginalAdmin.class</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.kafka.clients.admin.PulsarAdmin</pattern>
+                  <shadedPattern>org.apache.kafka.clients.admin.Admin</shadedPattern>
                 </relocation>
 
                 <!-- General relocation rules for Pulsar client dependencies -->
