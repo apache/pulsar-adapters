@@ -83,7 +83,7 @@ public class PulsarConsumerCoordinator {
 
         private void encodePartitionsByHost(final DataOutputStream out) throws IOException {
             // encode partitions by host
-            out.writeInt(partitions.size());
+            out.writeInt(1);
             writeHostInfo(out, "fakeHost", 9999);
             writeTopicPartitions(out, partitions);
         }
