@@ -33,7 +33,7 @@ import java.util.Properties;
 public class PulsarKafkaProducerThreadSafeTest extends PulsarStandaloneTestSuite {
     private Producer producer;
 
-    private static String getPlainTextServiceUrl() {
+    private String getPlainTextServiceUrl() {
         return container.getPlainTextServiceUrl();
     }
 

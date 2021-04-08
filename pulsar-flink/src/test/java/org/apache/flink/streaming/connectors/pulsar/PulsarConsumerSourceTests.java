@@ -30,6 +30,7 @@ import org.apache.flink.streaming.api.operators.StreamSource;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.util.AbstractStreamOperatorTestHarness;
+import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerStats;
 import org.apache.pulsar.client.api.Message;
@@ -39,7 +40,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.MessageImpl;
-import org.apache.pulsar.common.api.proto.PulsarApi;
+import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -388,6 +389,12 @@ public class PulsarConsumerSourceTests {
         }
 
         @Override
+        public long getLastDisconnectedTimestamp() {
+            return 0L;
+        }
+
+
+        @Override
         public CompletableFuture<Void> unsubscribeAsync() {
             return null;
         }
@@ -475,6 +482,11 @@ public class PulsarConsumerSourceTests {
         }
 
         @Override
+        public CompletableFuture<Void> acknowledgeCumulativeAsync(MessageId messageId, Transaction transaction) {
+            return null;
+        }
+
+        @Override
         public CompletableFuture<Void> acknowledgeAsync(Message<?> message) {
             return null;
         }
@@ -483,6 +495,11 @@ public class PulsarConsumerSourceTests {
         public CompletableFuture<Void> acknowledgeAsync(MessageId messageId) {
             acknowledgedIds.put(messageId, messageId);
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Void> acknowledgeAsync(MessageId messageId, Transaction transaction) {
+            return null;
         }
 
         @Override
@@ -622,7 +639,7 @@ public class PulsarConsumerSourceTests {
 
     private static Message<byte[]> createMessage(String content, String messageId) {
         return new MessageImpl<byte[]>("my-topic", messageId, Collections.emptyMap(),
-                                       content.getBytes(), Schema.BYTES, PulsarApi.MessageMetadata.newBuilder());
+                                       content.getBytes(), Schema.BYTES, new MessageMetadata());
     }
 
     private static String createMessageId(long ledgerId, long entryId, long partitionIndex) {

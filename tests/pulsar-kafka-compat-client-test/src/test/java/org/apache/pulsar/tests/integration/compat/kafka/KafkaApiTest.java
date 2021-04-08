@@ -84,11 +84,11 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         private boolean field1;
     }
 
-    private static String getPlainTextServiceUrl() {
+    private String getPlainTextServiceUrl() {
         return container.getPlainTextServiceUrl();
     }
 
-    private static String getHttpServiceUrl() {
+    private String getHttpServiceUrl() {
         return container.getHttpServiceUrl();
     }
 
