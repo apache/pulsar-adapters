@@ -270,7 +270,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                                 .topic(partitionName).subscribeAsync();
                         int partitionIndex = i;
                         TopicPartition tp = new TopicPartition(
-                            TopicName.get(topic).getPartitionedTopicName(),
+                            TopicName.get(topic).getLocalName(),
                             partitionIndex);
                         futures.add(future.thenApply(consumer -> {
                             log.info("Add consumer {} for partition {}", consumer, tp);
@@ -284,7 +284,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                     CompletableFuture<org.apache.pulsar.client.api.Consumer<byte[]>> future = consumerBuilder.topic(topic)
                             .subscribeAsync();
                     TopicPartition tp = new TopicPartition(
-                        TopicName.get(topic).getPartitionedTopicName(),
+                        TopicName.get(topic).getLocalName(),
                         0);
                     futures.add(future.thenApply(consumer -> {
                         log.info("Add consumer {} for partition {}", consumer, tp);
@@ -361,7 +361,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
             while (item != null) {
                 TopicName topicName = TopicName.get(item.consumer.getTopic());
-                String topic = topicName.getPartitionedTopicName();
+                String topic = topicName.getLocalName();
                 int partition = topicName.isPartitioned() ? topicName.getPartitionIndex() : 0;
                 Message<byte[]> msg = item.message;
                 MessageIdImpl msgId = (MessageIdImpl) msg.getMessageId();

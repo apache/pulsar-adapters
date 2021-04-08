@@ -72,17 +72,9 @@ public class LineSplit {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        /*
-        // kafka would do something like:
         builder.<String, String>stream("streams-plaintext-input")
                 .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
                 .to("streams-linesplit-output");
-        */
-
-        // note topic names are in the pulsar notation
-        builder.<String, String>stream("persistent://public/default/streams-plaintext-input")
-            .flatMapValues(value -> Arrays.asList(value.split("\\W+")))
-            .to("persistent://public/default/streams-linesplit-output");
 
         final Topology topology = builder.build();
 
