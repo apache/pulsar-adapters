@@ -18,6 +18,7 @@
  */
 package org.apache.kafka.clients.consumer;
 
+import com.google.api.client.util.Maps;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.GroupRebalanceConfig;
@@ -28,7 +29,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Mostly noop implementation of coordinator to include minimal functionality that
@@ -69,11 +72,22 @@ public class PulsarConsumerCoordinator {
 
         private void encodeActiveAndStandbyTaskAssignment(final DataOutputStream out,
                                                           final List<TopicPartition> partitions) throws IOException {
+
+            int lastId = 0;
+            final Map<String, Integer> topicGroupIds = new HashMap<>();
             // encode active tasks
             // the number of assigned partitions must be the same as number of active tasks
             out.writeInt(partitions.size());
             for (TopicPartition p : partitions) {
-                out.writeInt(0); // topicGroupId
+                final int topicGroupId;
+                if (topicGroupIds.containsKey(p.topic())) {
+                    topicGroupId = topicGroupIds.get(p.topic());
+                } else {
+                    topicGroupId = lastId;
+                    lastId++;
+                    topicGroupIds.put(p.topic(), topicGroupId);
+                }
+                out.writeInt(topicGroupId);
                 out.writeInt(p.partition());
             }
 
