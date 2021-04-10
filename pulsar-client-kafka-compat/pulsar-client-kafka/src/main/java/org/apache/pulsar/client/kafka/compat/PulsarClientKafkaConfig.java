@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.pulsar.client.admin.PulsarAdmin;
+import org.apache.pulsar.client.admin.PulsarAdminBuilder;
 import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -120,5 +124,38 @@ public class PulsarClientKafkaConfig {
         }
 
         return clientBuilder;
+    }
+
+    @SneakyThrows
+    public static PulsarAdminBuilder getAdminBuilder(Properties properties) {
+        String serviceUrl = properties.getProperty("pulsar.admin.url");
+
+        String authPluginClassName = properties.getProperty("authPlugin");
+        String authParams = properties.getProperty("authParams");
+        boolean tlsAllowInsecureConnection =
+                Boolean.parseBoolean(properties.getProperty("tlsAllowInsecureConnection", "false"));
+
+        boolean tlsEnableHostnameVerification =
+                Boolean.parseBoolean(properties.getProperty("tlsEnableHostnameVerification", "false"));
+        final String tlsTrustCertsFilePath = properties.getProperty("tlsTrustCertsFilePath");
+
+        boolean useKeyStoreTls = Boolean
+                .parseBoolean(properties.getProperty("useKeyStoreTls", "false"));
+        String tlsTrustStoreType = properties.getProperty("tlsTrustStoreType", "JKS");
+        String tlsTrustStorePath = properties.getProperty("tlsTrustStorePath");
+        String tlsTrustStorePassword = properties.getProperty("tlsTrustStorePassword");
+
+        PulsarAdminBuilder adminBuilder = PulsarAdmin.builder()
+                .serviceHttpUrl(serviceUrl)
+                .allowTlsInsecureConnection(tlsAllowInsecureConnection)
+                .enableTlsHostnameVerification(tlsEnableHostnameVerification)
+                .tlsTrustCertsFilePath(tlsTrustCertsFilePath)
+                .useKeyStoreTls(useKeyStoreTls)
+                .tlsTrustStoreType(tlsTrustStoreType)
+                .tlsTrustStorePath(tlsTrustStorePath)
+                .tlsTrustStorePassword(tlsTrustStorePassword)
+                .authentication(authPluginClassName, authParams);
+
+        return adminBuilder;
     }
 }

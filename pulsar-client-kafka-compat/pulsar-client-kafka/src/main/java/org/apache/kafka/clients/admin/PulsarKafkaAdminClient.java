@@ -18,6 +18,7 @@
  */
 package org.apache.kafka.clients.admin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.ElectionType;
 import org.apache.kafka.common.Metric;
@@ -27,42 +28,156 @@ import org.apache.kafka.common.TopicPartitionReplica;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.internals.KafkaFutureImpl;
 import org.apache.kafka.common.quota.ClientQuotaAlteration;
 import org.apache.kafka.common.quota.ClientQuotaFilter;
 
+import org.apache.pulsar.client.admin.PulsarAdmin;
+import org.apache.pulsar.client.admin.PulsarAdminBuilder;
+import org.apache.pulsar.client.admin.PulsarAdminException;
+import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
+import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.functions.utils.FunctionCommon;
+
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Mostly noop implementation of AdminClient
- * to avoid Kafka Streams trying to use the Kafka one/trying to connect to kafka.
- * Also to override static methods.
  */
+@Slf4j
 public class PulsarKafkaAdminClient implements Admin {
 
-    private PulsarKafkaAdminClient(AdminClientConfig config, KafkaAdminClient.TimeoutProcessorFactory timeoutProcessorFactory) {
+    private final Properties properties;
+    private final PulsarAdmin admin;
+
+    private final ConcurrentHashMap<String, Boolean> partitionedTopics = new ConcurrentHashMap<>();
+
+    private PulsarKafkaAdminClient(AdminClientConfig config) {
+        properties = new Properties();
+        log.info("config originals: {}", config.originals());
+        config.originals().forEach((k, v) -> {
+            log.info("Setting k = {} v = {}", k, v);
+            // properties do not allow null values
+            if (k != null && v != null) {
+                properties.put(k, v);
+            }
+        });
+
+        PulsarAdminBuilder builder = PulsarClientKafkaConfig.getAdminBuilder(properties);
+        try {
+            admin = builder.build();
+        } catch (PulsarClientException e) {
+            log.error("Could not create Pulsar Admin", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    static PulsarKafkaAdminClient createInternal(AdminClientConfig config, KafkaAdminClient.TimeoutProcessorFactory timeoutProcessorFactory) {
-        return new PulsarKafkaAdminClient(config, timeoutProcessorFactory);
+    static PulsarKafkaAdminClient createInternal(AdminClientConfig config) {
+        return new PulsarKafkaAdminClient(config);
     }
 
     public static Admin create(Properties props) {
-        return PulsarKafkaAdminClient.createInternal(new AdminClientConfig(props, true), (KafkaAdminClient.TimeoutProcessorFactory)null);
+        return PulsarKafkaAdminClient.createInternal(new AdminClientConfig(props, true));
     }
 
     public static Admin create(Map<String, Object> conf) {
-        return PulsarKafkaAdminClient.createInternal(new AdminClientConfig(conf, true), (KafkaAdminClient.TimeoutProcessorFactory)null);
+        return PulsarKafkaAdminClient.createInternal(new AdminClientConfig(conf, true));
+    }
+
+    private boolean isPartitionedTopic(String topic) {
+        Boolean res = partitionedTopics.computeIfAbsent(topic, t -> {
+            try {
+                int numPartitions = admin.topics()
+                        .getPartitionedTopicMetadata(t)
+                        .partitions;
+                return numPartitions > 0;
+            } catch (PulsarAdminException e) {
+                log.error("getPartitionedTopicMetadata failed", e);
+                return null;
+            }
+        });
+        if (res == null) {
+            throw new RuntimeException("Could not get topic metadata");
+        }
+        return res;
+    }
+
+    public <K, V> Map<K, KafkaFutureImpl<V>> execute(Collection<K> param,
+                                                     java.util.function.BiConsumer<K, KafkaFutureImpl<V>> func) {
+        // preparing topics list for asking metadata about them
+        final Map<K, KafkaFutureImpl<V>> futures
+                = new HashMap<>();
+        for (K value : param) {
+            KafkaFutureImpl<V> future = new KafkaFutureImpl<>();
+            futures.put(value, future);
+            func.accept(value, future);
+        }
+        return futures;
+    }
+
+    public <K, K2, V> Map<K, KafkaFutureImpl<V>> execute(Map<K, K2> param,
+                                 java.util.function.BiConsumer<Map.Entry<K, K2>, KafkaFutureImpl<V>> func) {
+        // preparing topics list for asking metadata about them
+        final Map<K, KafkaFutureImpl<V>> futures
+                = new HashMap<>(param.size());
+        for (Map.Entry<K, K2> value : param.entrySet()) {
+            KafkaFutureImpl<V> future = new KafkaFutureImpl<>();
+            futures.put(value.getKey(), future);
+            func.accept(value, future);
+        }
+        return futures;
     }
 
     @Override
     public void close(Duration duration) {
-        // noop
+        admin.close();
+    }
+
+    @Override
+    public ListOffsetsResult listOffsets(Map<TopicPartition, OffsetSpec> topicPartitionOffsets,
+                                         ListOffsetsOptions listOffsetsOptions) {
+        final Map<TopicPartition, KafkaFutureImpl<ListOffsetsResult.ListOffsetsResultInfo>> futures =
+            execute(topicPartitionOffsets, (entry, future) -> {
+                TopicPartition topicPartition = entry.getKey();
+                String topicName = isPartitionedTopic(topicPartition.topic())
+                        ? topicPartition.topic() + TopicName.PARTITIONED_TOPIC_SUFFIX + topicPartition.partition()
+                        : topicPartition.topic();
+                admin.topics()
+                        .getLastMessageIdAsync(topicName)
+                        .whenComplete((msgId, ex) -> {
+                            if (ex == null) {
+                                long offset = FunctionCommon.getSequenceId(msgId);
+                                future.complete(new ListOffsetsResult.ListOffsetsResultInfo(
+                                        offset,
+                                        System.currentTimeMillis(),
+                                        Optional.empty()));
+                            } else {
+                                log.error("Admin failed to get lastMessageId for topic " + topicName, ex);
+                                future.completeExceptionally(ex);
+                            }
+                        });
+            });
+        return new ListOffsetsResult(new HashMap<>(futures));
+    }
+
+    @Override
+    public DeleteRecordsResult deleteRecords(Map<TopicPartition, RecordsToDelete> map, DeleteRecordsOptions deleteRecordsOptions) {
+        final Map<TopicPartition, KafkaFutureImpl<DeletedRecords>> futures =
+                execute(map, (entry, future) -> {
+                    // nothing to do, cannot delete messages before offset, let pulsar expire stuff
+                    future.complete(new DeletedRecords(entry.getValue().beforeOffset()));
+                });
+
+        return new DeleteRecordsResult(new HashMap<>(futures));
     }
 
     @Override
@@ -141,11 +256,6 @@ public class PulsarKafkaAdminClient implements Admin {
     }
 
     @Override
-    public DeleteRecordsResult deleteRecords(Map<TopicPartition, RecordsToDelete> map, DeleteRecordsOptions deleteRecordsOptions) {
-        throw new UnsupportedOperationException("Operation is not supported");
-    }
-
-    @Override
     public CreateDelegationTokenResult createDelegationToken(CreateDelegationTokenOptions createDelegationTokenOptions) {
         throw new UnsupportedOperationException("Operation is not supported");
     }
@@ -212,11 +322,6 @@ public class PulsarKafkaAdminClient implements Admin {
 
     @Override
     public AlterConsumerGroupOffsetsResult alterConsumerGroupOffsets(String s, Map<TopicPartition, OffsetAndMetadata> map, AlterConsumerGroupOffsetsOptions alterConsumerGroupOffsetsOptions) {
-        throw new UnsupportedOperationException("Operation is not supported");
-    }
-
-    @Override
-    public ListOffsetsResult listOffsets(Map<TopicPartition, OffsetSpec> map, ListOffsetsOptions listOffsetsOptions) {
         throw new UnsupportedOperationException("Operation is not supported");
     }
 

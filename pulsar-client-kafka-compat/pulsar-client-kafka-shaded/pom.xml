@@ -72,7 +72,24 @@
                   <include>commons-codec:commons-codec</include>
                   <include>org.apache.bookkeeper:bookkeeper-common-allocator</include>
                   <include>commons-collections:commons-collections</include>
-                  <include>org.asynchttpclient:*</include>
+                  <!--
+                    Do not shade AHC
+                    <include>org.asynchttpclient:*</include>
+
+                    it results in stuff like
+                    java.lang.NumberFormatException: null
+                    at java.lang.Integer.parseInt (Integer.java:614)
+                    at java.lang.Integer.parseInt (Integer.java:770)
+                    at org.apache.pulsar.shade.org.asynchttpclient.config.AsyncHttpClientConfigHelper$Config.getInt (AsyncHttpClientConfigHelper.java:85)
+                    at org.apache.pulsar.shade.org.asynchttpclient.config.AsyncHttpClientConfigDefaults.defaultMaxRedirects (AsyncHttpClientConfigDefaults.java:138)
+                    at org.apache.pulsar.shade.org.asynchttpclient.DefaultAsyncHttpClientConfig$Builder.<init> (DefaultAsyncHttpClientConfig.java:702)
+                    at org.apache.pulsar.client.admin.internal.http.AsyncHttpConnector.<init> (AsyncHttpConnector.java:97)
+                    at org.apache.pulsar.client.admin.internal.http.AsyncHttpConnectorProvider.getConnector (AsyncHttpConnectorProvider.java:52)
+                    at org.apache.pulsar.client.admin.internal.PulsarAdminImpl.<init> (PulsarAdminImpl.java:196)
+                    at org.apache.pulsar.client.admin.internal.PulsarAdminBuilderImpl.build (PulsarAdminBuilderImpl.java:47)
+
+                    similar to https://github.com/playframework/play-ws/issues/229
+                    -->
                   <include>io.netty:netty-codec-http</include>
                   <include>io.netty:netty-transport-native-epoll</include>
                   <include>org.reactivestreams:reactive-streams</include>
@@ -147,11 +164,6 @@
                 </relocation>
 
                 <!-- General relocation rules for Pulsar client dependencies -->
-
-                <relocation>
-                  <pattern>org.asynchttpclient</pattern>
-                  <shadedPattern>org.apache.pulsar.shade.org.asynchttpclient</shadedPattern>
-                </relocation>
                 <relocation>
                   <pattern>org.apache.commons</pattern>
                   <shadedPattern>org.apache.pulsar.shade.org.apache.commons</shadedPattern>

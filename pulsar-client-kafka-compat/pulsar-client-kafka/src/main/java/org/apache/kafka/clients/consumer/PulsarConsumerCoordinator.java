@@ -117,16 +117,13 @@ public class PulsarConsumerCoordinator {
         }
     }
 
-    public static void invokePartitionsAssigned(final ConsumerConfig config, final List<TopicPartition> assignedPartitions) {
-        final GroupRebalanceConfig rebalanceConfig = new GroupRebalanceConfig(config,
-                GroupRebalanceConfig.ProtocolType.CONSUMER);
-
+    public static void invokePartitionsAssigned(final String groupId, final ConsumerConfig config, final List<TopicPartition> assignedPartitions) {
         final List<ConsumerPartitionAssignor> assignors = PartitionAssignorAdapter.getAssignorInstances(
                 config.getList(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG),
                 config.originals());
 
         // Give the assignor a chance to update internal state based on the received assignment
-        ConsumerGroupMetadata groupMetadata = new ConsumerGroupMetadata(rebalanceConfig.groupId);
+        ConsumerGroupMetadata groupMetadata = new ConsumerGroupMetadata(groupId);
 
         ByteBuffer bbInfo = new AssignmentInfo(assignedPartitions).encode();
         ConsumerPartitionAssignor.Assignment assignment =

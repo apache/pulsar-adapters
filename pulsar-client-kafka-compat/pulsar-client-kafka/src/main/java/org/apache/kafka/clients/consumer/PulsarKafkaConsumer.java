@@ -18,6 +18,8 @@
  */
 package org.apache.kafka.clients.consumer;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
@@ -48,6 +50,7 @@ import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.functions.utils.FunctionCommon;
 
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -56,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -164,7 +168,11 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
             consumerConfig.ignore(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG);
         }
 
-        groupId = consumerConfig.getString(ConsumerConfig.GROUP_ID_CONFIG);
+        // kafka removes group id for the restore consumer but adds client id
+        groupId = consumerConfig.getString(ConsumerConfig.GROUP_ID_CONFIG) == null
+                ? consumerConfig.getString(ConsumerConfig.CLIENT_ID_CONFIG)
+                : consumerConfig.getString(ConsumerConfig.GROUP_ID_CONFIG);
+        Preconditions.checkNotNull(groupId, "groupId cannot be null");
         isAutoCommit = consumerConfig.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG);
         strategy = getStrategy(consumerConfig.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG));
         log.info("Offset reset strategy has been assigned value {}", strategy);
@@ -298,7 +306,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
             
             // Wait for all consumers to be ready
             futures.forEach(CompletableFuture::join);
-            PulsarConsumerCoordinator.invokePartitionsAssigned(consumerCfg, topicPartitions);
+            PulsarConsumerCoordinator.invokePartitionsAssigned(groupId, consumerCfg, Lists.newArrayList(consumers.keySet()));
 
             // Notify the listener is now owning all topics/partitions
             if (callback != null) {
@@ -321,8 +329,11 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
     @Override
     public void assign(Collection<TopicPartition> partitions) {
+        Set<String> topics = partitions.stream().map(p -> p.topic()).collect(Collectors.toSet());
+        subscribe(topics);
         // not throwing exception to let KafkaStreams use the consumer.
-        log.info("Tried to assign partitions {}. The operation is not supported", partitions);
+        //log.error("Tried to assign partitions {}. The operation is not supported", partitions,
+        //        new UnsupportedOperationException("not supported"));
     }
 
     @Override
@@ -644,17 +655,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
     
     @Override
     public OffsetAndMetadata committed(TopicPartition partition) {
-        OffsetAndMetadata om = lastCommittedOffset.get(partition);
-        if (om == null) {
-            try {
-                long offset = FunctionCommon.getSequenceId(consumers.get(partition).getLastMessageId());
-                om = new OffsetAndMetadata(offset);
-            } catch (PulsarClientException e) {
-                log.error("failed to get sequenceId for {} ", partition);
-                throw new RuntimeException(e);
-            }
-        }
-        return om;
+        return lastCommittedOffset.get(partition);
     }
 
     @Override
@@ -664,7 +665,10 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
     @Override
     public Map<TopicPartition, OffsetAndMetadata> committed(Set<TopicPartition> partitions) {
-        return partitions.stream().collect(Collectors.toMap(x -> x, this::committed));
+        return partitions.stream()
+                .map(x -> new AbstractMap.SimpleEntry<>(x, committed(x)))
+                .filter(entry -> entry.getValue() != null)
+                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
     }
 
     @Override
