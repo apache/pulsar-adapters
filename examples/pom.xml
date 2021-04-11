@@ -35,6 +35,7 @@
   <modules>
     <module>flink</module>
     <module>spark</module>
+    <module>kafka-streams</module>
   </modules>
 
 </project>

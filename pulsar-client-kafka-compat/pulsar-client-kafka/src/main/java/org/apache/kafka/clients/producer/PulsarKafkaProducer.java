@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.Metric;
@@ -189,6 +190,11 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
     @Override
     public void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> map, String s) throws ProducerFencedException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void sendOffsetsToTransaction(Map<TopicPartition, OffsetAndMetadata> map, ConsumerGroupMetadata consumerGroupMetadata) throws ProducerFencedException {
         throw new UnsupportedOperationException();
     }
 
@@ -366,7 +372,15 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
         TopicPartition tp = new TopicPartition(topic, partition);
         TypedMessageBuilderImpl<byte[]> mb = (TypedMessageBuilderImpl<byte[]>) msgBuilder;
-        return new RecordMetadata(tp, offset, 0L, mb.getPublishTime(), 0L, mb.hasKey() ? mb.getKey().length() : 0, size);
+
+        long publishTime = 0L;
+        try {
+            // there is no hasPublishTime() currently
+            publishTime = mb.getPublishTime();
+        } catch (IllegalStateException ise) {
+            logger.debug("could not get publish time");
+        }
+        return new RecordMetadata(tp, offset, 0L, publishTime, 0L, mb.hasKey() ? mb.getKey().length() : 0, size);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarKafkaProducer.class);
