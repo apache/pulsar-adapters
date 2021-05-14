@@ -21,7 +21,7 @@ package org.apache.pulsar.client.kafka.compat;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
+import static org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig.AUTO_UPDATE_PARTITIONS;
 import org.apache.pulsar.client.api.ConsumerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.RegexSubscriptionMode;
@@ -67,6 +67,9 @@ public class PulsarConsumerKafkaConfig {
             consumerBuilder.subscriptionTopicsMode(mode);
         }
 
+        if (properties.containsKey(AUTO_UPDATE_PARTITIONS)) {
+            consumerBuilder.autoUpdatePartitions(Boolean.parseBoolean(properties.getProperty(AUTO_UPDATE_PARTITIONS)));
+        }
         return consumerBuilder;
     }
 }

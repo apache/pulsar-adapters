@@ -19,18 +19,14 @@
 package org.apache.kafka.clients.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageRouter;
@@ -73,6 +69,7 @@ public class PulsarKafkaProducer<K, V> extends Producer<K, V> {
     public static String KAFKA_KEY_MAX_QUEUE_BUFFERING_MESSAGES = "queue.buffering.max.messages";
     public static String KAFKA_KEY_MAX_BATCH_MESSAGES = "batch.num.messages";
     public static String KAFKA_KEY_REQUEST_TIMEOUT_MS = "request.timeout.ms";
+    public static String AUTO_UPDATE_PARTITIONS = "pulsar.auto.update.partitions";
 
     private final ConcurrentMap<String, org.apache.pulsar.client.api.Producer<byte[]>> producers = new ConcurrentHashMap<>();
 
@@ -134,7 +131,9 @@ public class PulsarKafkaProducer<K, V> extends Producer<K, V> {
         if (properties.containsKey(KAFKA_KEY_REQUEST_TIMEOUT_MS)) {
             pulsarProducerBuilder.sendTimeout(config.requestTimeoutMs(), TimeUnit.MILLISECONDS);
         }
-
+        if (properties.containsKey(AUTO_UPDATE_PARTITIONS)) {
+            pulsarProducerBuilder.autoUpdatePartitions(Boolean.parseBoolean(properties.getProperty(AUTO_UPDATE_PARTITIONS)));
+        }
         pulsarProducerBuilder.blockIfQueueFull(blockIfQueueFull).compressionType(compressionType);
 
     }
