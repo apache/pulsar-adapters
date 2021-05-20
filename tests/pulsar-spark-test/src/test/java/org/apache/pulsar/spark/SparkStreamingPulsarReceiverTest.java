@@ -150,8 +150,48 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
     @Test(expectedExceptions = NullPointerException.class,
             expectedExceptionsMessageRegExp = "ConsumerConfigurationData must not be null",
             dataProvider = "ServiceUrls")
+    public void testReceiverWhenConsumerConfigurationIsNull(Supplier<String> serviceUrl) {
+        new SparkStreamingPulsarReceiver(
+                serviceUrl.get(),
+                null,
+                new AuthenticationDisabled());
+    }
+
+    @Test(dataProvider = "ServiceUrls")
+    public void testOverrideServiceUrlWithClientConfiguration(Supplier<String> serviceUrl) {
+        Map<String,Object> testClientConfig = new HashMap<>();
+        testClientConfig.put("serviceUrl",serviceUrl.get());
+
+        ConsumerConfigurationData<byte[]> testConsumerConfig = new ConsumerConfigurationData<>();
+        Set<String> set = new HashSet<>();
+        set.add(TOPIC);
+        testConsumerConfig.setTopicNames(set);
+        testConsumerConfig.setSubscriptionName(SUBS);
+        testConsumerConfig.setSubscriptionType(SubscriptionType.Shared);
+        testConsumerConfig.setReceiverQueueSize(1);
+
+        String deliberatelyWrongServiceUrl = "http://invalid.service.url:1234";
+
+        SparkStreamingPulsarReceiver testReceiver = new SparkStreamingPulsarReceiver(
+                deliberatelyWrongServiceUrl,
+                testClientConfig,
+                testConsumerConfig,
+                new AuthenticationDisabled());
+
+        testReceiver.onStart();
+        waitForTransmission();
+        testReceiver.onStop();
+    }
+
+    @Test(expectedExceptions = NullPointerException.class,
+            expectedExceptionsMessageRegExp = "ConsumerConfigurationData must not be null",
+            dataProvider = "ServiceUrls")
     public void testReceiverWhenClientConfigurationIsNull(Supplier<String> serviceUrl) {
-        new SparkStreamingPulsarReceiver(serviceUrl.get(), null, new AuthenticationDisabled());
+        new SparkStreamingPulsarReceiver(
+                serviceUrl.get(),
+                null,
+                null,
+                new AuthenticationDisabled());
     }
 
     private static void waitForTransmission() {
