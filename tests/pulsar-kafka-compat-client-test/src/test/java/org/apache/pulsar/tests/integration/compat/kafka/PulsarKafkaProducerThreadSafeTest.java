@@ -47,6 +47,15 @@ public class PulsarKafkaProducerThreadSafeTest extends PulsarStandaloneTestSuite
         producer = new KafkaProducer<>(producerProperties);
     }
 
+    @Override
+    public void tearDownCluster() throws Exception {
+        if (producer != null) {
+            producer.close();
+            producer = null;
+        }
+        super.tearDownCluster();
+    }
+
     /**
      * This test run 10 times in threadPool witch size is 5.
      * Different threads have same producer and different topics witch is based on thread time.
