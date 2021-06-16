@@ -1304,7 +1304,7 @@
     <dependency>
       <groupId>org.apache.pulsar</groupId>
       <artifactId>buildtools</artifactId>
-      <version>${project.version}</version>
+      <version>${pulsar.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -1347,11 +1347,6 @@
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.pulsar</groupId>
-      <artifactId>buildtools</artifactId>
-      <version>${pulsar.version}</version>
     </dependency>
 
     <dependency>
@@ -2031,6 +2026,6 @@
       </snapshots>
     </repository>
   </repositories>
-  
+
 </project>
 
