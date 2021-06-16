@@ -38,7 +38,7 @@ public class PulsarKafkaProducerThreadSafeTest extends PulsarStandaloneTestSuite
     }
 
     @BeforeTest
-    private void setup() {
+    private void setupProducer() {
         Properties producerProperties = new Properties();
         producerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
         producerProperties.put("key.serializer", IntegerSerializer.class.getName());

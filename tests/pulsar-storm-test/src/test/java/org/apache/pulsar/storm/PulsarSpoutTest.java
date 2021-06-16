@@ -274,7 +274,7 @@ public class PulsarSpoutTest extends ProducerConsumerBase {
     @Test
     public void testSharedConsumer() throws Exception {
         TopicStats topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 1);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 1);
         PulsarSpout otherSpout = new PulsarSpout(pulsarSpoutConf, PulsarClient.builder());
         MockSpoutOutputCollector otherMockCollector = new MockSpoutOutputCollector();
         SpoutOutputCollector collector = new SpoutOutputCollector(otherMockCollector);
@@ -284,18 +284,18 @@ public class PulsarSpoutTest extends ProducerConsumerBase {
         otherSpout.open(Maps.newHashMap(), context, collector);
 
         topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 1);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 1);
 
         otherSpout.close();
 
         topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 1);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 1);
     }
 
     @Test
     public void testNoSharedConsumer() throws Exception {
         TopicStats topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 1);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 1);
         pulsarSpoutConf.setSharedConsumerEnabled(false);
         PulsarSpout otherSpout = new PulsarSpout(pulsarSpoutConf, PulsarClient.builder());
         MockSpoutOutputCollector otherMockCollector = new MockSpoutOutputCollector();
@@ -306,12 +306,12 @@ public class PulsarSpoutTest extends ProducerConsumerBase {
         otherSpout.open(Maps.newHashMap(), context, collector);
 
         topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 2);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 2);
 
         otherSpout.close();
 
         topicStats = admin.topics().getStats(topic);
-        assertEquals(topicStats.subscriptions.get(subscriptionName).consumers.size(), 1);
+        assertEquals(topicStats.getSubscriptions().get(subscriptionName).getConsumers().size(), 1);
     }
 
     @Test

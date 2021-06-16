@@ -18,6 +18,7 @@
  */
 package org.apache.flink.streaming.connectors.pulsar;
 
+import java.util.function.Function;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.OperatorStateStore;
@@ -558,6 +559,16 @@ public class PulsarConsumerSourceTests {
         }
 
         @Override
+        public void seek(Function<String, Object> function) throws PulsarClientException {
+
+        }
+
+        @Override
+        public CompletableFuture<Void> seekAsync(Function<String, Object> function) {
+            return null;
+        }
+
+        @Override
         public CompletableFuture<Void> seekAsync(MessageId messageId) {
             return null;
         }
@@ -597,18 +608,18 @@ public class PulsarConsumerSourceTests {
 
         @Override
         public void reconsumeLater(Message<?> message, long delayTime, TimeUnit unit) throws PulsarClientException {
-            
+
         }
 
         @Override
         public void reconsumeLater(Messages<?> messages, long delayTime, TimeUnit unit) throws PulsarClientException {
-            
+
         }
 
         @Override
         public void reconsumeLaterCumulative(Message<?> message, long delayTime, TimeUnit unit)
                 throws PulsarClientException {
-            
+
         }
 
         @Override

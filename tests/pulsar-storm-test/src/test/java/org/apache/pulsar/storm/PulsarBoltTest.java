@@ -21,11 +21,9 @@ package org.apache.pulsar.storm;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.fail;
-
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
@@ -190,7 +188,7 @@ public class PulsarBoltTest extends ProducerConsumerBase {
     @Test
     public void testSharedProducer() throws Exception {
         TopicStats topicStats = admin.topics().getStats(topic);
-        Assert.assertEquals(topicStats.publishers.size(), 1);
+        Assert.assertEquals(topicStats.getPublishers().size(), 1);
         PulsarBolt otherBolt = new PulsarBolt(pulsarBoltConf, PulsarClient.builder());
         MockOutputCollector otherMockCollector = new MockOutputCollector();
         OutputCollector collector = new OutputCollector(otherMockCollector);
@@ -200,12 +198,12 @@ public class PulsarBoltTest extends ProducerConsumerBase {
         otherBolt.prepare(Maps.newHashMap(), context, collector);
 
         topicStats = admin.topics().getStats(topic);
-        Assert.assertEquals(topicStats.publishers.size(), 1);
+        Assert.assertEquals(topicStats.getPublishers().size(), 1);
 
         otherBolt.close();
 
         topicStats = admin.topics().getStats(topic);
-        Assert.assertEquals(topicStats.publishers.size(), 1);
+        Assert.assertEquals(topicStats.getPublishers().size(), 1);
     }
 
     @Test
