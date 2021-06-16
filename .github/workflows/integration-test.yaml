@@ -17,7 +17,7 @@
 # under the License.
 #
 
-name: CI - Unit
+name: CI - Integration
 on:
   pull_request:
     branches:
@@ -31,7 +31,7 @@ env:
 
 jobs:
 
-  unit-tests:
+  integration-tests:
     name:
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -71,9 +71,9 @@ jobs:
           distribution: 'adopt'
           java-version: 11
 
-      - name: run unit tests
+      - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        run: mvn -B -ntp -pl '!org.apache.pulsar.tests:pulsar-kafka-compat-client-test,!org.apache.pulsar.tests:pulsar-spark-test' clean verify
+        run: mvn -B -ntp -pl org.apache.pulsar.tests:pulsar-kafka-compat-client-test,org.apache.pulsar.tests:pulsar-spark-test -am -DintegrationTests clean verify
 
       - name: package surefire artifacts
         if: failure()
