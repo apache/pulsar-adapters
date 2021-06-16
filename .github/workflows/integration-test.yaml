@@ -79,6 +79,16 @@ jobs:
           cd pulsar
           mvn -B -ntp -f tests/pom.xml -pl org.apache.pulsar.tests:tests-parent,org.apache.pulsar.tests:integration install
 
+      - name: build apachepulsar/pulsar-test-latest-version:latest
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+          run: |
+            docker pull apachepulsar/pulsar-all:2.8.0
+            docker pull apachepulsar/pulsar:2.8.0
+            docker tag apachepulsar/pulsar-all:2.8.0 apachepulsar/pulsar-all:latest
+            docker tag apachepulsar/pulsar:2.8.0 apachepulsar/pulsar:latest
+            cd ~/pulsar
+            mvn -B -f tests/docker-images/pom.xml install -am -Pdocker,-main -DskipTests
+
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: mvn -B -ntp -pl org.apache.pulsar.tests:pulsar-kafka-compat-client-test,org.apache.pulsar.tests:pulsar-spark-test -am -DintegrationTests -DskipTests -DredirectTestOutputToFile=false clean verify
