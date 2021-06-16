@@ -18,13 +18,17 @@
  */
 package org.apache.pulsar.log4j2.appender;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractManager;
 import org.apache.logging.log4j.core.config.Property;
+import org.apache.pulsar.client.api.Authentication;
+import org.apache.pulsar.client.api.AuthenticationFactory;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerBuilder;
@@ -34,6 +38,7 @@ import org.apache.pulsar.client.api.TypedMessageBuilder;
 
 public class PulsarManager extends AbstractManager {
 
+    public static final String PRODUCER_PROPERTY_PREFIX = "producer.";
     static Supplier<ClientBuilder> PULSAR_CLIENT_BUILDER = PulsarClient::builder;
 
     private PulsarClient client;
@@ -41,6 +46,7 @@ public class PulsarManager extends AbstractManager {
 
     private final String serviceUrl;
     private final String topic;
+    private final Property[] properties;
     private final String key;
     private final boolean syncSend;
 
@@ -55,6 +61,7 @@ public class PulsarManager extends AbstractManager {
         this.serviceUrl = Objects.requireNonNull(serviceUrl, "serviceUrl");
         this.topic = Objects.requireNonNull(topic, "topic");
         this.syncSend = syncSend;
+        this.properties = properties;
         this.key = key;
     }
 
@@ -66,17 +73,17 @@ public class PulsarManager extends AbstractManager {
             } catch (Exception e) {
                 // exceptions on closing
                 LOGGER.warn("Failed to close producer within {} milliseconds",
-                    timeUnit.toMillis(timeout), e);
+                        timeUnit.toMillis(timeout), e);
             }
         }
         return true;
     }
 
-    public void send(final byte[] msg)  {
+    public void send(final byte[] msg) {
         if (producer != null) {
             String newKey = null;
 
-            if(key != null && key.contains("${")) {
+            if (key != null && key.contains("${")) {
                 newKey = getLoggerContext().getConfiguration().getStrSubstitutor().replace(key);
             } else if (key != null) {
                 newKey = key;
@@ -98,37 +105,99 @@ public class PulsarManager extends AbstractManager {
                 }
             } else {
                 messageBuilder.sendAsync()
-                    .exceptionally(cause -> {
-                        LOGGER.error("Unable to write to Pulsar in appender [" + getName() + "]", cause);
-                        return null;
-                    });
+                        .exceptionally(cause -> {
+                            LOGGER.error("Unable to write to Pulsar in appender [" + getName() + "]", cause);
+                            return null;
+                        });
             }
         }
     }
 
     public void startup() throws Exception {
-        try {
-            client = PULSAR_CLIENT_BUILDER.get()
-                .serviceUrl(serviceUrl)
-                .build();
-            ProducerBuilder<byte[]> producerBuilder = client.newProducer()
+        createClient();
+        ProducerBuilder<byte[]> producerBuilder = client.newProducer()
                 .topic(topic)
-                .producerName("pulsar-log4j2-appender-" + topic)
                 .blockIfQueueFull(false);
-            if (syncSend) {
-                // disable batching for sync send
-                producerBuilder = producerBuilder.enableBatching(false);
-            } else {
-                // enable batching in 10 ms for async send
-                producerBuilder = producerBuilder
+        if (syncSend) {
+            // disable batching for sync send
+            producerBuilder = producerBuilder.enableBatching(false);
+        } else {
+            // enable batching in 10 ms for async send
+            producerBuilder = producerBuilder
                     .enableBatching(true)
                     .batchingMaxPublishDelay(10, TimeUnit.MILLISECONDS);
-            }
-            producer = producerBuilder.create();
-        } catch (Exception t) {
-            LOGGER.error("Failed to start pulsar manager", t);
-            throw t;
         }
+        Map<String, Object> producerConfiguration = propertiesToProducerConfiguration();
+        if (!producerConfiguration.isEmpty()) {
+            producerBuilder.loadConf(producerConfiguration);
+        }
+        producer = producerBuilder.create();
+    }
+
+    private void createClient() throws PulsarClientException {
+        Map<String, Object> configuration = propertiesToClientConfiguration();
+
+        // must be the same as
+        // https://pulsar.apache.org/docs/en/security-tls-keystore/#configuring-clients
+        String authPluginClassName = getAndRemoveString("authPlugin", "", configuration);
+        String authParamsString = getAndRemoveString("authParams", "", configuration);
+        Authentication authentication =
+                AuthenticationFactory.create(authPluginClassName, authParamsString);
+        boolean tlsAllowInsecureConnection =
+                Boolean.parseBoolean(
+                        getAndRemoveString("tlsAllowInsecureConnection", "false", configuration));
+
+        boolean tlsEnableHostnameVerification =
+                Boolean.parseBoolean(
+                        getAndRemoveString("tlsEnableHostnameVerification", "false", configuration));
+        final String tlsTrustCertsFilePath =
+                getAndRemoveString("tlsTrustCertsFilePath", "", configuration);
+
+        boolean useKeyStoreTls =
+                Boolean.parseBoolean(getAndRemoveString("useKeyStoreTls", "false", configuration));
+        String tlsTrustStoreType = getAndRemoveString("tlsTrustStoreType", "JKS", configuration);
+        String tlsTrustStorePath = getAndRemoveString("tlsTrustStorePath", "", configuration);
+        String tlsTrustStorePassword =
+                getAndRemoveString("tlsTrustStorePassword", "", configuration);
+
+        ClientBuilder clientBuilder =
+                PULSAR_CLIENT_BUILDER.get()
+                        .loadConf(configuration)
+                        .tlsTrustStorePassword(tlsTrustStorePassword)
+                        .tlsTrustStorePath(tlsTrustStorePath)
+                        .tlsTrustCertsFilePath(tlsTrustCertsFilePath)
+                        .tlsTrustStoreType(tlsTrustStoreType)
+                        .useKeyStoreTls(useKeyStoreTls)
+                        .enableTlsHostnameVerification(tlsEnableHostnameVerification)
+                        .allowTlsInsecureConnection(tlsAllowInsecureConnection)
+                        .authentication(authentication);
+        if (!serviceUrl.isEmpty()) {
+            clientBuilder.serviceUrl(serviceUrl);
+        }
+        client = clientBuilder.build();
+    }
+
+    private Map<String, Object> propertiesToClientConfiguration() {
+        return propertiesToConfiguration(false);
+    }
+
+    private Map<String, Object> propertiesToProducerConfiguration() {
+        return propertiesToConfiguration(true);
+    }
+
+    private Map<String, Object> propertiesToConfiguration(boolean producerProperties) {
+        return Arrays.stream(properties).filter(property -> property.getValue() != null
+                && property.getName().startsWith(PRODUCER_PROPERTY_PREFIX) == producerProperties)
+                .collect(Collectors.toMap(
+                        property -> producerProperties ?
+                                property.getName().substring(PRODUCER_PROPERTY_PREFIX.length()) : property.getName(),
+                        Property::getValue));
+    }
+
+    private static String getAndRemoveString(
+            String name, String defaultValue, Map<String, Object> properties) {
+        Object value = properties.remove(name);
+        return value != null ? value.toString() : defaultValue;
     }
 
     public String getServiceUrl() {
