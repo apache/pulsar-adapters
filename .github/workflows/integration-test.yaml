@@ -81,7 +81,7 @@ jobs:
 
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-        run: mvn -B -ntp -pl org.apache.pulsar.tests:pulsar-kafka-compat-client-test,org.apache.pulsar.tests:pulsar-spark-test -am -DintegrationTests -DskipTests clean verify
+        run: mvn -B -ntp -pl org.apache.pulsar.tests:pulsar-kafka-compat-client-test,org.apache.pulsar.tests:pulsar-spark-test -am -DintegrationTests -DskipTests -DredirectTestOutputToFile=false clean verify
 
       - name: package surefire artifacts
         if: failure()
