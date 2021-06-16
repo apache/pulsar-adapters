@@ -87,7 +87,7 @@ jobs:
             docker tag apachepulsar/pulsar-all:2.8.0 apachepulsar/pulsar-all:latest
             docker tag apachepulsar/pulsar:2.8.0 apachepulsar/pulsar:latest
             cd ~/pulsar
-            mvn -B -f tests/docker-images/pom.xml install -am -Pdocker,-main -DskipTests
+            mvn -B -f tests/docker-images/pom.xml install -pl org.apache.pulsar.tests:latest-version-image -am -Pdocker,-main -DskipTests
 
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
