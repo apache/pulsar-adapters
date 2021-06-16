@@ -77,9 +77,9 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
     private static final String QUEUE_ENQUEUE_TIMEOUT_MS = "queue.enqueue.timeout.ms";
     private static final String BATCH_NUM_MESSAGES = "batch.num.messages";
     private static final String CLIENT_ID = "client.id";
-    
+
     private final static int publishPartition = 1;
-    
+
     @DataProvider(name = "partitions")
     public Object[][] totalPartitions() {
         return new Object[][] { { 0 }, { 10 } };
@@ -103,13 +103,13 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
         final String serviceUrl = lookupUrl.toString();
         final String topicName = "persistent://my-property/my-ns/my-topic";
         final String groupId = "group1";
-        
+
         int partition = -1;
         if (partitions > 0) {
             admin.topics().createPartitionedTopic(topicName, 10);
             partition = publishPartition;
         }
-        
+
         // create subscription
         Consumer<byte[]> cons = pulsarClient.newConsumer().topic(topicName).subscriptionName(groupId).subscribe();
         cons.close();
@@ -140,24 +140,24 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
             published.add(sendMessage);
             producer.send(message);
         }
-        
-        
+        producer.close();
+
         // (2) Consume using simple consumer
         PulsarKafkaSimpleConsumer consumer = new PulsarKafkaSimpleConsumer(serviceUrl, 0, 0, 0, "clientId");
         List<String> topics = Collections.singletonList(topicName);
         TopicMetadataRequest req = new TopicMetadataRequest(topics);
         kafka.javaapi.TopicMetadataResponse resp = consumer.send(req);
-        
+
         List<TopicMetadata> metaData = resp.topicsMetadata();
         PartitionMetadata part = metaData.get(0).partitionsMetadata().get(0);
-        
+
         long readOffset = kafka.api.OffsetRequest.EarliestTime();
         FetchRequest fReq = new FetchRequestBuilder()
                 .clientId("c1")
                 .addFetch(topicName, partition, readOffset, 100000)
                 .build();
         FetchResponse fetchResponse = consumer.fetch(fReq);
-        
+
         long lastOffset = 0;
         MessageId offset = null;
         for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topicName, partition)) {
@@ -174,25 +174,25 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
             received.add(new String(bytes, StandardCharsets.UTF_8));
         }
         lastOffset -= 1;
-        
+
         assertEquals(published.size(), received.size());
         published.removeAll(received);
         assertTrue(published.isEmpty());
-        
+
         TopicAndPartition topicPartition = new TopicAndPartition(topicName, partition);
         PulsarOffsetMetadataAndError offsetError = new PulsarOffsetMetadataAndError(offset, null, (short) 0);
         Map<TopicAndPartition, PulsarOffsetMetadataAndError> requestInfo = Collections.singletonMap(topicPartition,
                 offsetError);
         PulsarOffsetCommitRequest offsetReq = new PulsarOffsetCommitRequest(groupId, requestInfo, (short) -1, 0, "c1");
         consumer.commitOffsets(offsetReq);
-        
+
         final long expectedReadOffsetPosition = lastOffset;
-        
+
         retryStrategically((test) -> fetchOffset(consumer, topicPartition, groupId) == expectedReadOffsetPosition, 10, 150);
-        
+
         long offset1 = fetchOffset(consumer, topicPartition, groupId);
         MessageIdImpl actualMsgId = ((MessageIdImpl)MessageIdUtils.getMessageId(offset1));
-        
+
         MessageIdImpl expectedMsgId = (MessageIdImpl) offset;
         assertEquals(actualMsgId.getLedgerId(), expectedMsgId.getLedgerId());
         assertEquals(actualMsgId.getEntryId(), expectedMsgId.getEntryId() + 1);
