@@ -18,13 +18,23 @@
  */
 package org.apache.kafka.clients.simple.consumer;
 
+import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-
+import kafka.api.FetchRequest;
+import kafka.api.PartitionFetchInfo;
+import kafka.api.PartitionOffsetRequestInfo;
+import kafka.common.ErrorMapping;
+import kafka.common.OffsetMetadataAndError;
+import kafka.common.TopicAndPartition;
+import kafka.javaapi.OffsetCommitResponse;
+import kafka.javaapi.TopicMetadataRequest;
+import kafka.javaapi.consumer.SimpleConsumer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.PulsarClientKafkaConfig;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Consumer;
@@ -36,21 +46,8 @@ import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.policies.data.ManagedLedgerInternalStats.CursorStats;
 import org.apache.pulsar.common.policies.data.PersistentTopicInternalStats;
-import org.apache.pulsar.common.policies.data.PersistentTopicInternalStats.CursorStats;
-
-import com.google.common.collect.Maps;
-
-import kafka.api.FetchRequest;
-import kafka.api.PartitionFetchInfo;
-import kafka.api.PartitionOffsetRequestInfo;
-import kafka.common.ErrorMapping;
-import kafka.common.OffsetMetadataAndError;
-import kafka.common.TopicAndPartition;
-import kafka.javaapi.OffsetCommitResponse;
-import kafka.javaapi.TopicMetadataRequest;
-import kafka.javaapi.consumer.SimpleConsumer;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Note: <br/>
@@ -79,7 +76,7 @@ public class PulsarKafkaSimpleConsumer extends SimpleConsumer {
     }
 
     /**
-     * 
+     *
      * @param host
      *            pulsar-broker service url
      * @param port
@@ -193,10 +190,10 @@ public class PulsarKafkaSimpleConsumer extends SimpleConsumer {
     /**
      * <pre>
      * Overriden method: OffsetCommitResponse commitOffsets(OffsetCommitRequest request)
-     * 
+     *
      * Note:
      * created PulsarOffsetCommitResponse as OffsetCommitRequest doesn't provide getters
-     * 
+     *
      * </pre>
      */
     public OffsetCommitResponse commitOffsets(PulsarOffsetCommitRequest request) {
@@ -222,13 +219,13 @@ public class PulsarKafkaSimpleConsumer extends SimpleConsumer {
     /**
      * <pre>
      * Overriden method: OffsetFetchResponse fetchOffsets(OffsetFetchRequest request)
-     * 
+     *
      * Note:
      * created PulsarOffsetFetchRequest as OffsetFetchRequest doesn't have getters for any field
      * and PulsarOffsetFetchResponse created as base-class doesn't have setters to set state
      * &#64;param request
      * &#64;return
-     * 
+     *
      * </pre>
      */
     public PulsarOffsetFetchResponse fetchOffsets(PulsarOffsetFetchRequest request) {

@@ -66,8 +66,8 @@
   </scm>
 
   <ciManagement>
-    <system>Travis</system>
-    <url>https://travis-ci.org/apache/pulsar</url>
+    <system>GitHub Actions</system>
+    <url>https://github.com/apache/pulsar-adapters/actions</url>
   </ciManagement>
 
   <issueManagement>
@@ -76,20 +76,20 @@
   </issueManagement>
 
   <properties>
-    <pulsar.version>2.8.0-SNAPSHOT</pulsar.version>
+    <pulsar.version>2.8.0</pulsar.version>
     <flink.version>1.7.2</flink.version>
     <storm.version>2.0.0</storm.version>
     <kafka-client.version>2.7.0</kafka-client.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
 
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
 
     <!--config keys to congiure test selection -->
-    <include>*</include>
+    <include>**/Test*.java,**/*Test.java,**/*Tests.java,**/*TestCase.java</include>
     <exclude/>
     <groups/>
-    <excludedGroups/>
+    <excludedGroups>quarantine</excludedGroups>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -102,31 +102,33 @@
     <docker.organization>apachepulsar</docker.organization>
     <skipSourceReleaseAssembly>false</skipSourceReleaseAssembly>
     <skipBuildDistribution>false</skipBuildDistribution>
+    <shadePluginPhase>package</shadePluginPhase>
+    <narPluginPhase>package</narPluginPhase>
 
     <!-- apache commons -->
     <commons-compress.version>1.19</commons-compress.version>
 
-    <bookkeeper.version>4.13.0</bookkeeper.version>
-    <zookeeper.version>3.6.2</zookeeper.version>
+    <bookkeeper.version>4.14.1</bookkeeper.version>
+    <zookeeper.version>3.6.3</zookeeper.version>
     <snappy.version>1.1.7</snappy.version> <!-- ZooKeeper server -->
     <dropwizardmetrics.version>3.2.5</dropwizardmetrics.version> <!-- ZooKeeper server -->
     <curator.version>5.1.0</curator.version>
-    <netty.version>4.1.60.Final</netty.version>
-    <netty-tc-native.version>2.0.36.Final</netty-tc-native.version>
-    <jetty.version>9.4.35.v20201120</jetty.version>
-    <jersey.version>2.31</jersey.version>
+    <netty.version>4.1.63.Final</netty.version>
+    <netty-tc-native.version>2.0.38.Final</netty-tc-native.version>
+    <jetty.version>9.4.42.v20210604</jetty.version>
+    <conscrypt.version>2.5.2</conscrypt.version>
+    <jersey.version>2.34</jersey.version>
     <athenz.version>1.10.9</athenz.version>
     <prometheus.version>0.5.0</prometheus.version>
-    <aspectj.version>1.9.2</aspectj.version>
-    <vertx.version>3.5.3</vertx.version>
+    <vertx.version>3.5.4</vertx.version>
     <rocksdb.version>6.10.2</rocksdb.version>
     <slf4j.version>1.7.25</slf4j.version>
     <commons.collections.version>3.2.2</commons.collections.version>
     <log4j2.version>2.14.0</log4j2.version>
     <bouncycastle.version>1.68</bouncycastle.version>
     <bouncycastlefips.version>1.0.2</bouncycastlefips.version>
-    <jackson.version>2.11.1</jackson.version>
-    <jackson.databind.version>2.11.1</jackson.databind.version>
+    <jackson.version>2.12.3</jackson.version>
+    <jackson.databind.version>2.12.3</jackson.databind.version>
     <reflections.version>0.9.11</reflections.version>
     <swagger.version>1.6.2</swagger.version>
     <puppycrawl.checkstyle.version>8.37</puppycrawl.checkstyle.version>
@@ -145,8 +147,8 @@
     <rabbitmq-client.version>5.1.1</rabbitmq-client.version>
     <aws-sdk.version>1.11.774</aws-sdk.version>
     <avro.version>1.10.2</avro.version>
-    <joda.version>2.10.1</joda.version>
-    <jclouds.version>2.2.1</jclouds.version>
+    <joda.version>2.10.5</joda.version>
+    <jclouds.version>2.3.0</jclouds.version>
     <sqlite-jdbc.version>3.8.11.2</sqlite-jdbc.version>
     <mysql-jdbc.version>8.0.11</mysql-jdbc.version>
     <postgresql-jdbc.version>42.2.12</postgresql-jdbc.version>
@@ -156,6 +158,7 @@
     <elasticsearch.version>7.9.1</elasticsearch.version>
     <presto.version>332</presto.version>
     <scala.binary.version>2.11</scala.binary.version>
+    <scala-library.version>2.11.12</scala-library.version>
     <debezium.version>1.0.0.Final</debezium.version>
     <jsonwebtoken.version>0.11.1</jsonwebtoken.version>
     <opencensus.version>0.18.0</opencensus.version>
@@ -172,7 +175,7 @@
     <jcommander.version>1.78</jcommander.version>
     <commons-lang3.version>3.11</commons-lang3.version>
     <commons-configuration.version>1.10</commons-configuration.version>
-    <commons-io.version>2.5</commons-io.version>
+    <commons-io.version>2.8.0</commons-io.version>
     <commons-codec.version>1.10</commons-codec.version>
     <javax.ws.rs-api.version>2.1</javax.ws.rs-api.version>
     <log4j.version>1.2.17</log4j.version>
@@ -183,25 +186,29 @@
     <hppc.version>0.7.3</hppc.version>
     <spark-streaming_2.10.version>2.1.0</spark-streaming_2.10.version>
     <assertj-core.version>3.18.1</assertj-core.version>
-    <lombok.version>1.18.18</lombok.version>
-    <javax.annotation-api.version>1.2</javax.annotation-api.version>
+    <lombok.version>1.18.20</lombok.version>
+    <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
     <jaxb-api>2.3.1</jaxb-api>
     <javax.activation.version>1.2.0</javax.activation.version>
+    <jakarta.activation.version>1.2.2</jakarta.activation.version>
+    <jakarta.xml.bind.version>2.3.3</jakarta.xml.bind.version>
+    <jakarta.validation.version>2.0.2</jakarta.validation.version>
     <jna.version>4.2.0</jna.version>
-    <kubernetesclient.version>10.0.0</kubernetesclient.version>
-    <sundr.version>0.21.0</sundr.version>
+    <kubernetesclient.version>12.0.0</kubernetesclient.version>
     <nsq-client.version>1.0</nsq-client.version>
     <cron-utils.version>9.1.3</cron-utils.version>
     <spring-context.version>5.3.1</spring-context.version>
-    <docker-java.version>3.2.7</docker-java.version>
     <apache-http-client.version>4.5.13</apache-http-client.version>
 
     <!-- test dependencies -->
     <cassandra.version>3.6.0</cassandra.version>
     <disruptor.version>3.4.0</disruptor.version>
-    <testcontainers.version>1.15.1</testcontainers.version>
+    <testcontainers.version>1.15.3</testcontainers.version>
+    <!-- Set docker-java.version to the version of docker-java used in Testcontainers -->
+    <docker-java.version>3.2.8</docker-java.version>
     <kerby.version>1.1.1</kerby.version>
     <testng.version>7.3.0</testng.version>
+    <junit4.version>4.13.1</junit4.version>
     <mockito.version>3.8.0</mockito.version>
     <powermock.version>2.0.9</powermock.version>
     <javassist.version>3.25.0-GA</javassist.version>
@@ -214,7 +221,6 @@
     <!-- Plugin dependencies -->
     <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
-    <aspectj-maven-plugin.version>1.11.1</aspectj-maven-plugin.version>
     <license-maven-plugin.version>4.0.rc2</license-maven-plugin.version>
     <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
     <maven-enforcer-plugin.version>3.0.0-M3</maven-enforcer-plugin.version>
@@ -237,7 +243,9 @@
     <errorprone.version>2.5.1</errorprone.version>
     <errorprone.javac.version>9+181-r4173-1</errorprone.javac.version>
     <errorprone-slf4j.version>0.1.4</errorprone-slf4j.version>
-    <lightproto-maven-plugin.version>0.2</lightproto-maven-plugin.version>
+    <j2objc-annotations.version>1.3</j2objc-annotations.version>
+    <lightproto-maven-plugin.version>0.4</lightproto-maven-plugin.version>
+    <dependency-check-maven.version>6.1.5</dependency-check-maven.version>
 
     <!-- Used to configure rename.netty.native. Libs -->
     <rename.netty.native.libs>rename-netty-native-libs.sh</rename.netty.native.libs>
@@ -432,11 +440,17 @@
         <artifactId>testng</artifactId>
         <version>${testng.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.yaml</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
+            <exclusion>
+                <groupId>org.yaml</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit4.version}</version>
       </dependency>
 
       <dependency>
@@ -551,15 +565,32 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-recipes</artifactId>
-        <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>cpu-affinity</artifactId>
+        <version>${bookkeeper.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-core</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-web</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.curator</groupId>
+         <artifactId>curator-recipes</artifactId>
+         <version>${curator.version}</version>
+         <exclusions>
+             <exclusion>
+                 <groupId>org.apache.zookeeper</groupId>
+                 <artifactId>*</artifactId>
+             </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>
@@ -591,6 +622,10 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-all</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-testing</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
 
@@ -603,6 +638,10 @@
           <exclusion>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-all</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -647,6 +686,18 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-server</artifactId>
         <version>${jetty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-alpn-conscrypt-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.conscrypt</groupId>
+        <artifactId>conscrypt-openjdk-uber</artifactId>
+        <version>${conscrypt.version}</version>
       </dependency>
 
       <dependency>
@@ -807,6 +858,12 @@
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-json-jackson</artifactId>
         <version>${jersey.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -822,8 +879,18 @@
       </dependency>
 
       <dependency>
+         <groupId>com.github.docker-java</groupId>
+         <artifactId>docker-java-core</artifactId>
+         <version>${docker-java.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.docker-java</groupId>
-        <artifactId>docker-java-core</artifactId>
+        <artifactId>docker-java-api</artifactId>
+        <version>${docker-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.docker-java</groupId>
+        <artifactId>docker-java-transport-zerodep</artifactId>
         <version>${docker-java.version}</version>
       </dependency>
 
@@ -982,18 +1049,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjrt</artifactId>
-        <version>${aspectj.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjweaver</artifactId>
-        <version>${aspectj.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>net.jodah</groupId>
         <artifactId>typetools</artifactId>
         <version>${typetools.version}</version>
@@ -1097,23 +1152,10 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>testcontainers</artifactId>
+        <artifactId>testcontainers-bom</artifactId>
         <version>${testcontainers.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>kafka</artifactId>
-        <version>${testcontainers.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>mysql</artifactId>
-        <version>${testcontainers.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.datastax.cassandra</groupId>
@@ -1145,9 +1187,33 @@
       </dependency>
 
       <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>${jakarta.xml.bind.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.sun.activation</groupId>
         <artifactId>javax.activation</artifactId>
         <version>${javax.activation.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.sun.activation</groupId>
+        <artifactId>jakarta.activation</artifactId>
+        <version>${jakarta.activation.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>jakarta.activation</groupId>
+        <artifactId>jakarta.activation-api</artifactId>
+        <version>${jakarta.activation.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+        <version>${jakarta.validation.version}</version>
       </dependency>
 
       <dependency>
@@ -1218,15 +1284,69 @@
         <optional>true</optional>
       </dependency>
 
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>${errorprone.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.j2objc</groupId>
+        <artifactId>j2objc-annotations</artifactId>
+        <version>${j2objc-annotations.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <!-- These dependencies are common to all the submodules -->
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>buildtools</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
-      <version>${lombok.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.pulsar</groupId>
@@ -1247,7 +1367,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${maven-checkstyle-plugin.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.apache.pulsar</groupId>
@@ -1288,7 +1407,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire.version}</version>
         <configuration>
           <argLine> -Xmx1G -XX:+UseG1GC
             -Dpulsar.allocator.pooled=false
@@ -1301,18 +1419,14 @@
           <shutdown>kill</shutdown>
           <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
           <trimStackTrace>false</trimStackTrace>
+          <systemPropertyVariables>
+            <testRealAWS>${testRealAWS}</testRealAWS>
+            <testRetryCount>${testRetryCount}</testRetryCount>
+          </systemPropertyVariables>
           <properties>
             <property>
-              <name>testRealAWS</name>
-              <value>${testRealAWS}</value>
-            </property>
-            <property>
-              <name>testRetryCount</name>
-              <value>${testRetryCount}</value>
-            </property>
-            <property>
               <name>listener</name>
-              <value>org.apache.pulsar.tests.PulsarTestListener,org.apache.pulsar.tests.AnnotationListener</value>
+              <value>org.apache.pulsar.tests.PulsarTestListener,org.apache.pulsar.tests.AnnotationListener,org.apache.pulsar.tests.FailFastNotifier,org.apache.pulsar.tests.MockitoCleanupListener,org.apache.pulsar.tests.FastThreadLocalCleanupListener,org.apache.pulsar.tests.ThreadLeakDetectorListener</value>
             </property>
           </properties>
         </configuration>
@@ -1572,65 +1686,68 @@
             <exclude>**/*.so</exclude>
             <exclude>**/*.so.*</exclude>
             <exclude>**/*.dylib</exclude>
+            <exclude>src/test/resources/*.txt</exclude>
           </excludes>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
         <executions>
-          <execution>
-            <id>enforce-maven</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireJavaVersion>
-                  <version>[1.8.0,)</version>
-                </requireJavaVersion>
-                <requireMavenVersion>
-                  <version>[3.3.9,)</version>
-                </requireMavenVersion>
-              </rules>
-            </configuration>
-          </execution>
+            <execution>
+                <id>enforce-maven</id>
+                <goals>
+                    <goal>enforce</goal>
+                </goals>
+              <configuration>
+                <rules>
+                  <requireJavaVersion>
+                    <version>[1.8.0,)</version>
+                  </requireJavaVersion>
+                  <requireMavenVersion>
+                    <version>[3.3.9,)</version>
+                  </requireMavenVersion>
+                </rules>
+              </configuration>
+            </execution>
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <inherited>false</inherited>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.apache.resources</groupId>
-            <artifactId>apache-source-release-assembly-descriptor</artifactId>
-            <version>1.0.6</version>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <id>source-release-assembly-tar-gz</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <skipAssembly>${skipSourceReleaseAssembly}</skipAssembly>
-              <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-              <descriptorRefs>
-                <!-- defined in Apache Parent Pom -->
-                <descriptorRef>${sourceReleaseAssemblyDescriptor}</descriptorRef>
-              </descriptorRefs>
-              <finalName>apache-pulsar-${project.version}-src</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <formats>
-                <format>tar.gz</format>
-              </formats>
-              <tarLongFileMode>posix</tarLongFileMode>
-            </configuration>
-          </execution>
-        </executions>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
+          <inherited>false</inherited>
+          <dependencies>
+              <dependency>
+                  <groupId>org.apache.apache.resources</groupId>
+                  <artifactId>apache-source-release-assembly-descriptor</artifactId>
+                  <version>1.0.6</version>
+              </dependency>
+          </dependencies>
+          <executions>
+              <execution>
+                  <id>source-release-assembly-tar-gz</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+                  <configuration>
+                      <skipAssembly>${skipSourceReleaseAssembly}</skipAssembly>
+                      <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                      <descriptorRefs>
+                          <!-- defined in Apache Parent Pom -->
+                          <descriptorRef>${sourceReleaseAssemblyDescriptor}</descriptorRef>
+                      </descriptorRefs>
+                      <finalName>apache-pulsar-${project.version}-src</finalName>
+                      <appendAssemblyId>false</appendAssemblyId>
+                      <formats>
+                          <format>tar.gz</format>
+                      </formats>
+                      <tarLongFileMode>posix</tarLongFileMode>
+                  </configuration>
+              </execution>
+          </executions>
       </plugin>
     </plugins>
 
@@ -1641,10 +1758,10 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <includes>
-              <include>${include}</include>
+                <include>${include}</include>
             </includes>
             <excludes>
-              <exclude>**/*$*,${exclude}</exclude>
+                <exclude>**/*$*,${exclude}</exclude>
             </excludes>
             <groups>${groups}</groups>
             <excludedGroups>${excludedGroups}</excludedGroups>
@@ -1653,10 +1770,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1667,14 +1786,17 @@
         </plugin>
         <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec-maven-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.nifi</groupId>
           <artifactId>nifi-nar-maven-plugin</artifactId>
+          <version>${nifi-nar-maven-plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <finalName>${project.artifactId}-${project.version}</finalName>
@@ -1682,7 +1804,7 @@
           <executions>
             <execution>
               <id>default-nar</id>
-              <phase>package</phase>
+              <phase>${narPluginPhase}</phase>
               <goals>
                 <goal>nar</goal>
               </goals>
@@ -1692,20 +1814,42 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${maven-checkstyle-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${puppycrawl.checkstyle.version}</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <configLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/checkstyle.xml</configLocation>
+            <suppressionsLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/suppressions.xml</suppressionsLocation>
+            <encoding>UTF-8</encoding>
+            <excludes>**/proto/*</excludes>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>
+          <version>${git-commit-id-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <dependencies>
-            <dependency>
-              <groupId>com.github.spotbugs</groupId>
-              <artifactId>spotbugs</artifactId>
-            </dependency>
-          </dependencies>
+          <version>${spotbugs-maven-plugin.version}</version>
+            <dependencies>
+              <dependency>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs</artifactId>
+                <version>${spotbugs.version}</version>
+              </dependency>
+            </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -1713,24 +1857,156 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-ssh-external</artifactId>
+        <version>${wagon-ssh-external.version}</version>
       </extension>
       <extension>
         <groupId>kr.motd.maven</groupId>
         <artifactId>os-maven-plugin</artifactId>
+        <version>${os-maven-plugin.version}</version>
       </extension>
     </extensions>
   </build>
 
   <profiles>
-  <profile>
-    <id>jdk11-tests</id>
-    <activation>
-      <jdk>[11,)</jdk>
-    </activation>
-    <properties>
-      <test.additional.args> --add-opens java.base/jdk.internal.loader=ALL-UNNAMED </test.additional.args>
-    </properties>
-  </profile>
+    <profile>
+      <id>jdk11</id>
+      <activation>
+        <jdk>[11,)</jdk>
+      </activation>
+      <properties>
+        <!-- prevents silent NoSuchMethodErrors that happen at runtime on Java 8 -->
+        <!-- see https://github.com/apache/pulsar/issues/8445 -->
+        <maven.compiler.release>${maven.compiler.target}</maven.compiler.release>
+        <!-- required for running tests on JDK11+ -->
+        <test.additional.args> --add-opens java.base/jdk.internal.loader=ALL-UNNAMED </test.additional.args>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <!-- for some reason, setting maven.compiler.release property alone doesn't work -->
+                <release>${maven.compiler.release}</release>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco-maven-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>pre-unit-test</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>post-test</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>target/report</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <reporting>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <configuration>
+              <configLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/checkstyle.xml</configLocation>
+              <suppressionsLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/suppressions.xml</suppressionsLocation>
+              <encoding>UTF-8</encoding>
+              <excludes>**/proto/*</excludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <doclint>none</doclint>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <reportSets>
+              <reportSet>
+                <reports>
+                  <report>report</report>
+                </reports>
+              </reportSet>
+            </reportSets>
+          </plugin>
+        </plugins>
+      </reporting>
+    </profile>
+    <profile>
+      <id>docker</id>
+      <modules>
+        <module>docker</module>
+        <module>tests</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <!-- Checks style and licensing requirements. This is a good
+           idea to run for contributions and for the release process. While it would
+           be nice to run always these plugins can considerably slow the build and have
+           proven to create unstable builds in our multi-module project and when building
+           using multiple threads. The stability issues seen with Checkstyle in multi-module
+           builds include false-positives and false negatives. -->
+      <id>contrib-check</id>
+         <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <executions>
+                      <execution>
+                          <goals>
+                              <goal>check</goal>
+                          </goals>
+                          <phase>verify</phase>
+                      </execution>
+                   </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <executions>
+                       <execution>
+                          <id>check-style</id>
+                          <phase>verify</phase>
+                         <configuration>
+                           <configLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/checkstyle.xml</configLocation>
+                           <suppressionsLocation>${pulsar.basedir}/buildtools/src/main/resources/pulsar/suppressions.xml</suppressionsLocation>
+                           <encoding>UTF-8</encoding>
+                           <excludes>**/proto/*</excludes>
+                         </configuration>
+                          <goals>
+                             <goal>check</goal>
+                          </goals>
+                       </execution>
+                    </executions>
+                </plugin>
+             </plugins>
+         </build>
+    </profile>
 
     <profile>
       <id>windows</id>
@@ -1750,6 +2026,9 @@
       <id>central</id>
       <layout>default</layout>
       <url>https://repo1.maven.org/maven2</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
   

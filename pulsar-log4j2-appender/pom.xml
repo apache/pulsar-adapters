@@ -107,22 +107,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <executions>
-          <execution>
-            <id>log4j-plugin-processor</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <phase>process-classes</phase>
-            <configuration>
-              <proc>only</proc>
-              <annotationProcessors>
-                <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
-              </annotationProcessors>
-            </configuration>
-          </execution>
-        </executions>
+        <configuration combine.children="append">
+          <annotationProcessorPaths combine.children="append">
+            <path>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-core</artifactId>
+              <version>${log4j2.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
       </plugin>
     </plugins>
   </build>
