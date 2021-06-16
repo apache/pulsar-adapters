@@ -19,7 +19,7 @@
     under the License.
 
 -->
-<Configuration name="PulsarAppenderTest" status="OFF">
+<Configuration name="PulsarAppenderTest" status="info" packages="org.apache.pulsar.log4j2.appender">
   <Appenders>
     <Pulsar name="PulsarAppenderWithLayout" serviceUrl="pulsar://localhost:6650" topic="persistent://t/c/n/pulsar-topic" avoidRecursive="false">
       <PatternLayout pattern="[%m]"/>

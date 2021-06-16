@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.assertEquals;
@@ -48,6 +49,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.SimpleMessage;
+import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
@@ -56,101 +58,13 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
 import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
+import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class PulsarAppenderTest {
-
-    private static final String LOG_MESSAGE = "Hello, world!";
-
-    private static Log4jLogEvent createLogEvent() {
-        return Log4jLogEvent.newBuilder()
-            .setLoggerName(PulsarAppenderTest.class.getName())
-            .setLoggerFqcn(PulsarAppenderTest.class.getName())
-            .setLevel(Level.INFO)
-            .setMessage(new SimpleMessage(LOG_MESSAGE))
-            .build();
-    }
-
-    private ClientBuilderImpl clientBuilder;
-    private PulsarClient client;
-    private Producer<byte[]> producer;
-    private List<Message<byte[]>> history;
-
-    private LoggerContext ctx;
-
-    private class MockedMessageBuilder extends TypedMessageBuilderImpl<byte[]> {
-
-        MockedMessageBuilder() {
-            super(null, Schema.BYTES);
-        }
-
-        @Override
-        public MessageId send() {
-            synchronized (history) {
-                history.add(getMessage());
-            }
-
-            return mock(MessageId.class);
-        }
-
-        @Override
-        public CompletableFuture<MessageId> sendAsync() {
-            synchronized (history) {
-                history.add(getMessage());
-            }
-
-            return CompletableFuture.completedFuture(mock(MessageId.class));
-        }
-    }
-
-    @BeforeMethod
-    public void setUp() throws Exception {
-        history = new LinkedList<>();
-
-        client = mock(PulsarClient.class);
-        producer = mock(Producer.class);
-        clientBuilder = mock(ClientBuilderImpl.class);
-
-        doReturn(client).when(clientBuilder).build();
-        doReturn(clientBuilder).when(clientBuilder).serviceUrl(anyString());
-
-        ProducerBuilder<byte[]> producerBuilder = mock(ProducerBuilder.class);
-        when(client.newProducer()).thenReturn(producerBuilder);
-        doReturn(producerBuilder).when(producerBuilder).topic(anyString());
-        doReturn(producerBuilder).when(producerBuilder).producerName(anyString());
-        doReturn(producerBuilder).when(producerBuilder).enableBatching(anyBoolean());
-        doReturn(producerBuilder).when(producerBuilder).batchingMaxPublishDelay(anyLong(), any(TimeUnit.class));
-        doReturn(producerBuilder).when(producerBuilder).blockIfQueueFull(anyBoolean());
-        doReturn(producer).when(producerBuilder).create();
-
-        when(producer.newMessage()).then(invocation -> new MockedMessageBuilder());
-        when(producer.send(any(byte[].class)))
-            .thenAnswer(invocationOnMock -> {
-                Message<byte[]> msg = invocationOnMock.getArgument(0);
-                synchronized (history) {
-                    history.add(msg);
-                }
-                return null;
-            });
-
-        when(producer.sendAsync(any(byte[].class)))
-            .thenAnswer(invocationOnMock -> {
-                Message<byte[]> msg = invocationOnMock.getArgument(0);
-                synchronized (history) {
-                    history.add(msg);
-                }
-                CompletableFuture<MessageId> future = new CompletableFuture<>();
-                future.complete(mock(MessageId.class));
-                return future;
-            });
-
-        PulsarManager.PULSAR_CLIENT_BUILDER = () -> clientBuilder;
-
-        ctx = Configurator.initialize(
-            "PulsarAppenderTest",
-            getClass().getClassLoader(),
-            getClass().getClassLoader().getResource("PulsarAppenderTest.xml").toURI());
+public class PulsarAppenderTest extends AbstractPulsarAppenderTest {
+    public PulsarAppenderTest() {
+        super("PulsarAppenderTest.xml");
     }
 
     @Test
@@ -229,12 +143,4 @@ public class PulsarAppenderTest {
         assertEquals(item.getKey(), keyValue);
         assertEquals(LOG_MESSAGE, new String(item.getData(), StandardCharsets.UTF_8));
     }
-
-    private LogEvent deserializeLogEvent(final byte[] data) throws IOException, ClassNotFoundException {
-        final ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        try (ObjectInput ois = new ObjectInputStream(bis)) {
-            return (LogEvent) ois.readObject();
-        }
-    }
-
 }

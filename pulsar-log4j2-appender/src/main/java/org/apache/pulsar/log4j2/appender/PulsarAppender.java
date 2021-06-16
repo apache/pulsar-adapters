@@ -21,7 +21,6 @@ package org.apache.pulsar.log4j2.appender;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.logging.log4j.core.AbstractLifeCycle;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -186,7 +185,7 @@ public final class PulsarAppender extends AbstractAppender {
         try {
             manager.startup();
         } catch (Exception e) {
-            // fail to start the manager
+            LOGGER.error("Failed to start pulsar manager", e);
         }
     }
 
