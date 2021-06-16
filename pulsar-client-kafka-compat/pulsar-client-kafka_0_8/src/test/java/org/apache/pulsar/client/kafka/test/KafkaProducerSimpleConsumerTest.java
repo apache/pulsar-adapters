@@ -65,6 +65,7 @@ import kafka.serializer.Decoder;
 import kafka.serializer.Encoder;
 import kafka.serializer.StringEncoder;
 
+@Test(groups = "quarantine")
 public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
 
     private static final String BROKER_URL = "metadata.broker.list";
