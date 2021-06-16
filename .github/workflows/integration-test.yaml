@@ -77,7 +77,7 @@ jobs:
           cd ~
           git clone --depth 50 --single-branch --branch v2.8.0  https://github.com/apache/pulsar
           cd pulsar
-          mvn -B -ntp -f tests/integration/pom.xml install
+          mvn -B -ntp -f tests/pom.xml -pl org.apache.pulsar.tests:tests-parent,org.apache.pulsar.tests:integration install
 
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
