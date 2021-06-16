@@ -71,6 +71,14 @@ jobs:
           distribution: 'adopt'
           java-version: 11
 
+      - name: install org.apache.pulsar.tests:integration:jar:tests:2.8.0
+        if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
+        run: |
+          cd ~
+          git clone --depth 50 --single-branch --branch v2.8.0  https://github.com/apache/pulsar
+          cd pulsar
+          mvn -B -ntp -f tests/integration/pom.xml install
+
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: mvn -B -ntp -pl org.apache.pulsar.tests:pulsar-kafka-compat-client-test,org.apache.pulsar.tests:pulsar-spark-test -am -DintegrationTests -DskipTests clean verify
