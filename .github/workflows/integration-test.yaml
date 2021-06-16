@@ -81,13 +81,13 @@ jobs:
 
       - name: build apachepulsar/pulsar-test-latest-version:latest
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
-          run: |
-            docker pull apachepulsar/pulsar-all:2.8.0
-            docker pull apachepulsar/pulsar:2.8.0
-            docker tag apachepulsar/pulsar-all:2.8.0 apachepulsar/pulsar-all:latest
-            docker tag apachepulsar/pulsar:2.8.0 apachepulsar/pulsar:latest
-            cd ~/pulsar
-            mvn -B -f tests/docker-images/pom.xml install -pl org.apache.pulsar.tests:latest-version-image -am -Pdocker,-main -DskipTests
+        run: |
+          docker pull apachepulsar/pulsar-all:2.8.0
+          docker pull apachepulsar/pulsar:2.8.0
+          docker tag apachepulsar/pulsar-all:2.8.0 apachepulsar/pulsar-all:latest
+          docker tag apachepulsar/pulsar:2.8.0 apachepulsar/pulsar:latest
+          cd ~/pulsar
+          mvn -B -f tests/docker-images/pom.xml install -pl org.apache.pulsar.tests:latest-version-image -am -Pdocker,-main -DskipTests
 
       - name: run integration tests
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
