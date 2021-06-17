@@ -141,6 +141,7 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
             producer.send(message);
         }
         producer.close();
+        Thread.sleep(500);
 
         // (2) Consume using simple consumer
         PulsarKafkaSimpleConsumer consumer = new PulsarKafkaSimpleConsumer(serviceUrl, 0, 0, 0, "clientId");
@@ -158,6 +159,7 @@ public class KafkaProducerSimpleConsumerTest extends ProducerConsumerBase {
                 .build();
         FetchResponse fetchResponse = consumer.fetch(fReq);
 
+        Thread.sleep(500);
         long lastOffset = 0;
         MessageId offset = null;
         for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topicName, partition)) {
