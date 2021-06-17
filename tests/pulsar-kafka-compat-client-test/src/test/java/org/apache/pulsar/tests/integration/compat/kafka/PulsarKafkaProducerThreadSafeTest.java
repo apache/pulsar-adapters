@@ -37,13 +37,23 @@ public class PulsarKafkaProducerThreadSafeTest extends PulsarStandaloneTestSuite
         return container.getPlainTextServiceUrl();
     }
 
-    @BeforeTest
-    private void setupProducer() {
+    @Override
+    public void setUpCluster() throws Exception {
+        super.setUpCluster();
         Properties producerProperties = new Properties();
         producerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
         producerProperties.put("key.serializer", IntegerSerializer.class.getName());
         producerProperties.put("value.serializer", StringSerializer.class.getName());
         producer = new KafkaProducer<>(producerProperties);
+    }
+
+    @Override
+    public void tearDownCluster() throws Exception {
+        if (producer != null) {
+            producer.close();
+            producer = null;
+        }
+        super.tearDownCluster();
     }
 
     /**

@@ -124,6 +124,7 @@ public class KafkaProducerConsumerTest extends ProducerConsumerBase {
             published.add(tweet);
             producer.send(message);
         }
+        producer.close();
         while (received.size() < total) {
             for (int i = 0; i < streams.size(); i++) {
                 List<PulsarKafkaStream<String, Tweet>> kafkaStreams = streams.get(topicName);
@@ -189,7 +190,7 @@ public class KafkaProducerConsumerTest extends ProducerConsumerBase {
         }
     }
 
-    
+
     @Test
     public void testProducerConsumerWithoutSerializer() throws Exception {
         final String serviceUrl = lookupUrl.toString();
@@ -230,6 +231,7 @@ public class KafkaProducerConsumerTest extends ProducerConsumerBase {
             KeyedMessage<byte[], byte[]> message = new KeyedMessage<>(topicName, name.getBytes(), sendMessage.getBytes());
             producer.send(message);
         }
+        producer.close();
         int count = 0;
         while (count < total) {
             for (int i = 0; i < streams.size(); i++) {
