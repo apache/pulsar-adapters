@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.pulsar.client.api.Consumer;
@@ -48,7 +49,7 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
     private static final String EXPECTED_MESSAGE = "pulsar-spark test message";
 
     @Test(dataProvider = "ServiceUrls")
-    public void testReceivedMessage(String serviceUrl) throws Exception {
+    public void testReceivedMessage(Supplier<String> serviceUrl) throws Exception {
         ConsumerConfigurationData<byte[]> consConf = new ConsumerConfigurationData<>();
 
         Set<String> set = new HashSet<>();
@@ -68,14 +69,14 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
         consConf.setMessageListener(msgListener);
 
         SparkStreamingPulsarReceiver receiver = new SparkStreamingPulsarReceiver(
-            serviceUrl,
+            serviceUrl.get(),
             consConf,
             new AuthenticationDisabled());
 
         receiver.onStart();
         waitForTransmission();
 
-        PulsarClient client = PulsarClient.builder().serviceUrl(serviceUrl).build();
+        PulsarClient client = PulsarClient.builder().serviceUrl(serviceUrl.get()).build();
         Producer<byte[]> producer = client.newProducer().topic(TOPIC).create();
         producer.send(EXPECTED_MESSAGE.getBytes());
 
@@ -85,7 +86,7 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
     }
 
     @Test(dataProvider = "ServiceUrls")
-    public void testDefaultSettingsOfReceiver(String serviceUrl) {
+    public void testDefaultSettingsOfReceiver(Supplier<String> serviceUrl) {
         ConsumerConfigurationData<byte[]> consConf = new ConsumerConfigurationData<>();
 
         Set<String> set = new HashSet<>();
@@ -94,7 +95,7 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
         consConf.setSubscriptionName(SUBS);
 
         SparkStreamingPulsarReceiver receiver = new SparkStreamingPulsarReceiver(
-            serviceUrl,
+            serviceUrl.get(),
             consConf,
             new AuthenticationDisabled());
 
@@ -103,7 +104,7 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
     }
 
     @Test(dataProvider = "ServiceUrls")
-    public void testSharedSubscription(String serviceUrl) throws Exception {
+    public void testSharedSubscription(Supplier<String> serviceUrl) throws Exception {
         ConsumerConfigurationData<byte[]> consConf = new ConsumerConfigurationData<>();
 
         Set<String> set = new HashSet<>();
@@ -120,12 +121,12 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
         });
 
         SparkStreamingPulsarReceiver receiver1 = new SparkStreamingPulsarReceiver(
-            serviceUrl,
+            serviceUrl.get(),
             consConf,
             new AuthenticationDisabled());
 
         SparkStreamingPulsarReceiver receiver2 = new SparkStreamingPulsarReceiver(
-                serviceUrl,
+                serviceUrl.get(),
                 consConf,
                 new AuthenticationDisabled());
 
@@ -133,7 +134,7 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
         receiver2.onStart();
         waitForTransmission();
 
-        PulsarClient client = PulsarClient.builder().serviceUrl(serviceUrl).build();
+        PulsarClient client = PulsarClient.builder().serviceUrl(serviceUrl.get()).build();
         Producer<byte[]> producer = client.newProducer().topic(TOPIC).create();
         for (int i = 0; i < 10; i++) {
             producer.send(EXPECTED_MESSAGE.getBytes());
@@ -149,8 +150,8 @@ public class SparkStreamingPulsarReceiverTest extends PulsarTestSuite {
     @Test(expectedExceptions = NullPointerException.class,
             expectedExceptionsMessageRegExp = "ConsumerConfigurationData must not be null",
             dataProvider = "ServiceUrls")
-    public void testReceiverWhenClientConfigurationIsNull(String serviceUrl) {
-        new SparkStreamingPulsarReceiver(serviceUrl, null, new AuthenticationDisabled());
+    public void testReceiverWhenClientConfigurationIsNull(Supplier<String> serviceUrl) {
+        new SparkStreamingPulsarReceiver(serviceUrl.get(), null, new AuthenticationDisabled());
     }
 
     private static void waitForTransmission() {
