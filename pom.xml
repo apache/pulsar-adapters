@@ -62,7 +62,7 @@
   <scm>
     <url>https://github.com/apache/pulsar-adapters</url>
     <connection>scm:git:https://github.com/apache/pulsar-adapters.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:apache/pulsar-adapters.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/apache/pulsar-adapters.git</developerConnection>
   </scm>
 
   <ciManagement>
