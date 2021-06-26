@@ -22,3 +22,25 @@
 # Apache Pulsar Adapters
 
 This repository is used for hosting all the adapters maintained and supported by Apache Pulsar PMC.
+
+
+
+## Building
+
+In order to build this code you can simply use Maven
+
+mvn install
+
+In order to build this repository the linked Pulsar release must be released to Maven Central
+other wise you have to build it locally.
+
+For instance if this code depends on Pulsar 2.8.0 you have to build Pulsar 2.8.0 locally
+
+```
+git clone https://github.com/apache/pulsar
+git checkout v2.8.0
+mvn clean install -DskipTests
+```
+
+This is because this repository depends on test integration artifacts of the relative version on the main 
+Apache Pulsar codebase
