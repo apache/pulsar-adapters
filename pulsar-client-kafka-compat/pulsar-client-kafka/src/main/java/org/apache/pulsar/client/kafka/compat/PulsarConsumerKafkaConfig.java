@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import static org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig.AUTO_UPDATE_PARTITIONS;
+import static org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig.CRYPTO_READER_FACTORY_CLASS_NAME;
 import org.apache.pulsar.client.api.ConsumerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.RegexSubscriptionMode;
@@ -69,6 +70,17 @@ public class PulsarConsumerKafkaConfig {
 
         if (properties.containsKey(AUTO_UPDATE_PARTITIONS)) {
             consumerBuilder.autoUpdatePartitions(Boolean.parseBoolean(properties.getProperty(AUTO_UPDATE_PARTITIONS)));
+        }
+        
+        if (properties.containsKey(CRYPTO_READER_FACTORY_CLASS_NAME)) {
+            try {
+                CryptoKeyReaderFactory cryptoReaderFactory = (CryptoKeyReaderFactory) Class
+                        .forName(properties.getProperty(CRYPTO_READER_FACTORY_CLASS_NAME)).newInstance();
+                consumerBuilder.cryptoKeyReader(cryptoReaderFactory.create(properties));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to create crypto reader using factory "
+                        + properties.getProperty(CRYPTO_READER_FACTORY_CLASS_NAME), e);
+            }
         }
         return consumerBuilder;
     }
