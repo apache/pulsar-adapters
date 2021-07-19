@@ -19,6 +19,7 @@
 package org.apache.pulsar.client.kafka.compat;
 
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -77,8 +78,9 @@ public class PulsarProducerKafkaConfig {
                 CryptoKeyReaderFactory cryptoReaderFactory = (CryptoKeyReaderFactory) Class
                         .forName(properties.getProperty(CRYPTO_READER_FACTORY_CLASS_NAME)).newInstance();
                 producerBuilder.cryptoKeyReader(cryptoReaderFactory.create(properties));
-                if (cryptoReaderFactory.getEncryptionKey() != null) {
-                    cryptoReaderFactory.getEncryptionKey().forEach(producerBuilder::addEncryptionKey);
+                Set<String> keys = cryptoReaderFactory.getEncryptionKey(properties);
+                if (keys != null) {
+                    keys.forEach(producerBuilder::addEncryptionKey);
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to create crypto reader using factory "

@@ -40,10 +40,12 @@ public interface CryptoKeyReaderFactory {
 
     /**
      * Encryption keys for {@link CryptoKeyReader} while enabling encryption at producer.
-     * 
+     *
+     *  @param properties
+     *            properties provided by user to get encryption-keys based on configuration params
      * @return Set of encryption keys
      */
-    default Set<String> getEncryptionKey() {
+    default Set<String> getEncryptionKey(Properties properties) {
         return null;
     }
 }

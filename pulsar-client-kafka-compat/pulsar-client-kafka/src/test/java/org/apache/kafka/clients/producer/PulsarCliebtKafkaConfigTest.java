@@ -104,7 +104,7 @@ public class PulsarCliebtKafkaConfigTest {
         }
 
         @Override
-        public Set<String> getEncryptionKey() {
+        public Set<String> getEncryptionKey(Properties properties) {
             return encryptionKeys;
         }
     }
