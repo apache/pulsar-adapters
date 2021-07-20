@@ -19,6 +19,7 @@
 package org.apache.pulsar.client.kafka.compat;
 
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -35,6 +36,7 @@ public class PulsarProducerKafkaConfig {
     public static final String BATCHING_ENABLED = "pulsar.producer.batching.enabled";
     public static final String BATCHING_MAX_MESSAGES = "pulsar.producer.batching.max.messages";
     public static final String AUTO_UPDATE_PARTITIONS = "pulsar.auto.update.partitions";
+    public static final String CRYPTO_READER_FACTORY_CLASS_NAME = "pulsar.crypto.reader.factory.class.name";
     /**
      * send operations will immediately fail with {@link ProducerQueueIsFullError} when there is no space left in
      * pending queue.
@@ -69,6 +71,21 @@ public class PulsarProducerKafkaConfig {
 
         if (properties.containsKey(AUTO_UPDATE_PARTITIONS)) {
             producerBuilder.autoUpdatePartitions(Boolean.parseBoolean(properties.getProperty(AUTO_UPDATE_PARTITIONS)));
+        }
+
+        if (properties.containsKey(CRYPTO_READER_FACTORY_CLASS_NAME)) {
+            try {
+                CryptoKeyReaderFactory cryptoReaderFactory = (CryptoKeyReaderFactory) Class
+                        .forName(properties.getProperty(CRYPTO_READER_FACTORY_CLASS_NAME)).newInstance();
+                producerBuilder.cryptoKeyReader(cryptoReaderFactory.create(properties));
+                Set<String> keys = cryptoReaderFactory.getEncryptionKey(properties);
+                if (keys != null) {
+                    keys.forEach(producerBuilder::addEncryptionKey);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to create crypto reader using factory "
+                        + properties.getProperty(CRYPTO_READER_FACTORY_CLASS_NAME), e);
+            }
         }
         return producerBuilder;
     }

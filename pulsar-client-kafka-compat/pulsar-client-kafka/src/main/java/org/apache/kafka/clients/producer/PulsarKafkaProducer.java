@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
     private final PulsarClient client;
-    private final ProducerBuilder<byte[]> pulsarProducerBuilder;
+    final ProducerBuilder<byte[]> pulsarProducerBuilder;
 
     private final ConcurrentMap<String, org.apache.pulsar.client.api.Producer<byte[]>> producers = new ConcurrentHashMap<>();
 
