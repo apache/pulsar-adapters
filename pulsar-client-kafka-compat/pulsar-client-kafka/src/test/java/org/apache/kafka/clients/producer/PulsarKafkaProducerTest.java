@@ -21,12 +21,15 @@ package org.apache.kafka.clients.producer;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,12 +39,10 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import org.apache.avro.reflect.Nullable;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
+import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.ProducerBuilder;
@@ -54,6 +55,8 @@ import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
 import org.apache.pulsar.client.impl.schema.AvroSchema;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
 import org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -61,6 +64,12 @@ import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
+
+import com.google.api.client.util.Maps;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @PrepareForTest({PulsarClientKafkaConfig.class, PulsarProducerKafkaConfig.class})
 @PowerMockIgnore({"org.apache.logging.log4j.*", "org.apache.kafka.clients.producer.ProducerInterceptor"})
@@ -118,7 +127,8 @@ public class PulsarKafkaProducerTest {
         properties.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "1000000");
         properties.put(PulsarProducerKafkaConfig.BLOCK_IF_PRODUCER_QUEUE_FULL, Boolean.FALSE.toString());
 
-        new PulsarKafkaProducer<>(properties);
+        PulsarKafkaProducer producer = new PulsarKafkaProducer<>(properties);
+        producer.close();
 
         verify(mockClientBuilder, times(1)).keepAliveInterval(1000, TimeUnit.SECONDS);
         verify(mockProducerBuilder, times(1)).sendTimeout(1000000, TimeUnit.MILLISECONDS);
@@ -171,7 +181,7 @@ public class PulsarKafkaProducerTest {
         pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1,"key", "value"));
 
         // Verify
-        verify(mockProducerBuilder, times(1)).intercept(
+        verify(mockProducerBuilder, atLeastOnce()).intercept(
                 (org.apache.pulsar.client.api.ProducerInterceptor)any());
     }
 
@@ -193,6 +203,7 @@ public class PulsarKafkaProducerTest {
         doReturn(mockClient).when(mockClientBuilder).build();
         doReturn(mockPartitionFuture).when(mockClient).getPartitionsForTopic(anyString());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).topic(anyString());
+        doReturn(mockProducerBuilder).when(mockProducerBuilder).autoUpdatePartitionsInterval(anyInt(), any());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).clone();
         doReturn(mockProducerBuilder).when(mockProducerBuilder).intercept(
                 (org.apache.pulsar.client.api.ProducerInterceptor) any());
@@ -245,7 +256,54 @@ public class PulsarKafkaProducerTest {
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("pulsar://localhost:6650"));
         properties.put(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, Long.toString((Integer.MAX_VALUE + 1L) * 1000));
 
-        new PulsarKafkaProducer<>(properties);
+        PulsarKafkaProducer producer = new PulsarKafkaProducer<>(properties);
+        producer.close();
+    }
+
+    @Test
+    public void testAutoRefreshPartitions() throws Exception {
+        ClientBuilder mockClientBuilder = mock(ClientBuilder.class);
+        ProducerBuilder mockProducerBuilder = mock(ProducerBuilder.class);
+        doAnswer(invocation -> {
+            Assert.assertEquals((int)invocation.getArguments()[0], 1000000, "Send time out is suppose to be 1000.");
+            return mockProducerBuilder;
+        }).when(mockProducerBuilder).sendTimeout(anyInt(), any(TimeUnit.class));
+        doReturn(mockClientBuilder).when(mockClientBuilder).serviceUrl(anyString());
+        doAnswer(invocation -> {
+            Assert.assertEquals((int)invocation.getArguments()[0], 1000, "Keep alive interval is suppose to be 1000.");
+            return mockClientBuilder;
+        }).when(mockClientBuilder).keepAliveInterval(anyInt(), any(TimeUnit.class));
+
+        PowerMockito.mockStatic(PulsarClientKafkaConfig.class);
+        PowerMockito.mockStatic(PulsarProducerKafkaConfig.class);
+        when(PulsarClientKafkaConfig.getClientBuilder(any(Properties.class))).thenReturn(mockClientBuilder);
+        when(PulsarProducerKafkaConfig.getProducerBuilder(any(), any())).thenReturn(mockProducerBuilder);
+
+        Properties properties = new Properties();
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, DefaultPartitioner.class);
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("pulsar://localhost:6650"));
+        properties.put(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, "1000000");
+        properties.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "1000000");
+        properties.put(PulsarProducerKafkaConfig.BLOCK_IF_PRODUCER_QUEUE_FULL, Boolean.FALSE.toString());
+
+        PulsarKafkaProducer producer = spy(new PulsarKafkaProducer<>(properties));
+        String topic = "persistent://prop/ns/t1";
+        Map<TopicPartition, PartitionInfo> map = Maps.newHashMap();
+        map.put(new TopicPartition(topic, 1), new PartitionInfo(topic, 1, null, null, null));
+        map.put(new TopicPartition(topic, 2), new PartitionInfo(topic, 2, null, null, null));
+        map.put(new TopicPartition(topic, 3), new PartitionInfo(topic, 3, null, null, null));
+        doReturn(map).when(producer).readPartitionsInfo(anyString());
+        producer.scheduleRefreshPartitionMetadata(topic, 1);
+        for (int i = 0; i < 5; i++) {
+            if (producer.getPartitions(topic) == map.size()) {
+                break;
+            }
+            Thread.sleep(100);
+        }
+        assertEquals(producer.getPartitions(topic), map.size());
+        producer.close();
     }
 
     public static class PulsarKafkaProducerInterceptor implements org.apache.kafka.clients.producer.ProducerInterceptor<String, String> {
