@@ -110,7 +110,7 @@ class SparkStreamingReliablePulsarReceiver(override val storageLevel: StorageLev
   }
 
   override def onStop(): Unit = try {
-    if (consumerThread != null && consumerThread.isAlive) consumerThread.stop()  // Ideally consumrThread should be closed beforee calling onStop.
+    consumerThread.join(30000L)
     if (consumer != null) consumer.close()
     if (pulsarClient != null) pulsarClient.close()
   } catch {
@@ -122,17 +122,23 @@ class SparkStreamingReliablePulsarReceiver(override val storageLevel: StorageLev
   def receive(): Unit = {
     while(!isStopped()){
       try {
-        val messages= consumer.batchReceive().toList
-
         // Update rate limit if necessary
         updateRateLimit
 
-        if(messages.size() > 0){
+        val messages = consumer.batchReceive()
+
+        if (messages != null && messages.size() > 0) {
           buffer ++= messages.map(msg => {
             SparkPulsarMessage(msg.getData, msg.getKey, msg.getMessageId, msg.getPublishTime, msg.getEventTime, msg.getTopicName, msg.getProperties.asScala.toMap)
           })
 
         }
+      }
+      catch {
+        case e: Exception => reportError("Failed to get messages", e)
+      }
+
+      try {
 
         val timeSinceLastStorePush = System.currentTimeMillis() - latestStorePushTime
 
@@ -160,7 +166,7 @@ class SparkStreamingReliablePulsarReceiver(override val storageLevel: StorageLev
 
       }
       catch {
-        case e: Exception => reportError("Failed to get messages", e)
+        case e: Exception => reportError("Failed to store messages", e)
           e.printStackTrace()
       }
     }
@@ -168,8 +174,8 @@ class SparkStreamingReliablePulsarReceiver(override val storageLevel: StorageLev
 
   def updateRateLimit(): Unit = {
     val newRateLimit = rateMultiplierFactor * supervisor.getCurrentRateLimit.min(maxRateLimit)
-    SparkStreamingReliablePulsarReceiver.LOG.info("New rate limit: " + newRateLimit)
     if (rateLimiter.getRate != newRateLimit) {
+      SparkStreamingReliablePulsarReceiver.LOG.info("New rate limit: " + newRateLimit)
       rateLimiter.setRate(newRateLimit)
     }
   }
