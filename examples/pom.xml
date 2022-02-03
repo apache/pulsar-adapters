@@ -33,7 +33,6 @@
   <name>Pulsar Adapter Examples :: Parent</name>
 
   <modules>
-    <module>flink</module>
     <module>spark</module>
     <module>kafka-streams</module>
   </modules>

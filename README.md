@@ -23,7 +23,7 @@
 
 This repository is used for hosting all the adapters maintained and supported by Apache Pulsar PMC.
 
-
+[Apache Flink adapter](https://github.com/apache/flink/tree/master/flink-connectors/flink-connector-pulsar) is supported and maintained by Apache Flink Community.
 
 ## Building
 

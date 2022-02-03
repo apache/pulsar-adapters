@@ -77,7 +77,6 @@
 
   <properties>
     <pulsar.version>2.8.0</pulsar.version>
-    <flink.version>1.7.2</flink.version>
     <storm.version>2.0.0</storm.version>
     <kafka-client.version>2.7.0</kafka-client.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
@@ -253,7 +252,6 @@
 
   <modules>
     <module>pulsar-storm</module>
-    <module>pulsar-flink</module>
     <module>pulsar-spark</module>
     <module>pulsar-client-kafka-compat</module>
     <module>pulsar-log4j2-appender</module>
@@ -360,49 +358,6 @@
         <groupId>org.apache.storm</groupId>
         <artifactId>storm-core</artifactId>
         <version>${storm.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-streaming-java_2.11</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-table_2.11</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-json</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-avro</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-test-utils_2.11</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-streaming-scala_2.11</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-runtime_2.11</artifactId>
-        <type>test-jar</type>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-streaming-java_2.11</artifactId>
-        <type>test-jar</type>
-        <version>${flink.version}</version>
       </dependency>
 
       <dependency>
