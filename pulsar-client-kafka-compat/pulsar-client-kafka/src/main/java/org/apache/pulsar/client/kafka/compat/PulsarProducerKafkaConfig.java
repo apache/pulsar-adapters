@@ -36,6 +36,7 @@ public class PulsarProducerKafkaConfig {
     public static final String BATCHING_ENABLED = "pulsar.producer.batching.enabled";
     public static final String BATCHING_MAX_MESSAGES = "pulsar.producer.batching.max.messages";
     public static final String AUTO_UPDATE_PARTITIONS = "pulsar.auto.update.partitions";
+    public static final String AUTO_UPDATE_PARTITIONS_REFRESH_DURATION = "pulsar.auto.update.partition.duration.ms";
     public static final String CRYPTO_READER_FACTORY_CLASS_NAME = "pulsar.crypto.reader.factory.class.name";
     /**
      * send operations will immediately fail with {@link ProducerQueueIsFullError} when there is no space left in

@@ -30,7 +30,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -44,26 +46,31 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.ProducerFencedException;
 import org.apache.kafka.common.serialization.Serializer;
+import org.apache.pulsar.client.api.CompressionType;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.Schema;
-import org.apache.pulsar.client.api.CompressionType;
-import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.Schema;
+import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
+import org.apache.pulsar.client.kafka.compat.KafkaMessageRouter;
+import org.apache.pulsar.client.kafka.compat.KafkaProducerInterceptorWrapper;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
 import org.apache.pulsar.client.kafka.compat.PulsarKafkaSchema;
 import org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig;
-import org.apache.pulsar.client.kafka.compat.KafkaMessageRouter;
-import org.apache.pulsar.client.kafka.compat.KafkaProducerInterceptorWrapper;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import lombok.Getter;
+
 public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
+    private static final Logger log = LoggerFactory.getLogger(PulsarKafkaProducer.class);
     private final PulsarClient client;
     final ProducerBuilder<byte[]> pulsarProducerBuilder;
 
@@ -74,6 +81,9 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
     private final Partitioner partitioner;
     private volatile Cluster cluster = Cluster.empty();
+    @Getter
+    private final int autoUpdatePartitionDurationMs;
+    private final ScheduledExecutorService executor;
 
     private List<ProducerInterceptor<K, V>> interceptors;
 
@@ -176,6 +186,10 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
         interceptors = (List) producerConfig.getConfiguredInstances(
                 ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, ProducerInterceptor.class);
+
+        autoUpdatePartitionDurationMs = Integer.parseInt(
+                properties.getProperty(PulsarProducerKafkaConfig.AUTO_UPDATE_PARTITIONS_REFRESH_DURATION, "300000"));
+        executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
@@ -272,14 +286,19 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
     public void close() {
         close(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         partitioner.close();
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
 
     @Override
     public void close(long timeout, TimeUnit unit) {
-        try {
-            client.closeAsync().get(timeout, unit);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new RuntimeException(e);
+        if (client != null) {
+            try {
+                client.closeAsync().get(timeout, unit);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -290,23 +309,44 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
     private org.apache.pulsar.client.api.Producer<byte[]> createNewProducer(String topic) {
         try {
+            Map<TopicPartition, PartitionInfo> partitionMap = readPartitionsInfo(topic);
             // Add the partitions info for the new topic
-            synchronized (this){
-                cluster = cluster.withPartitions(readPartitionsInfo(topic));
+            synchronized (this) {
+                cluster = cluster.withPartitions(partitionMap);
             }
+            if (getPartitions(topic) > 1 && autoUpdatePartitionDurationMs > 0) {
+                // allow pulsar client lib to update partition before updating at kakfa clusters
+                scheduleRefreshPartitionMetadata(topic, autoUpdatePartitionDurationMs * 2);
+            }
+
             List<org.apache.pulsar.client.api.ProducerInterceptor> wrappedInterceptors = interceptors.stream()
                     .map(interceptor -> new KafkaProducerInterceptorWrapper(interceptor, keySchema, valueSchema, topic))
                     .collect(Collectors.toList());
-            return pulsarProducerBuilder.clone()
-                    .topic(topic)
-                    .intercept(wrappedInterceptors.toArray(new org.apache.pulsar.client.api.ProducerInterceptor[wrappedInterceptors.size()]))
+            return pulsarProducerBuilder.clone().topic(topic)
+                    .intercept(wrappedInterceptors
+                            .toArray(new org.apache.pulsar.client.api.ProducerInterceptor[wrappedInterceptors.size()]))
+                    .autoUpdatePartitionsInterval((int) autoUpdatePartitionDurationMs, TimeUnit.MILLISECONDS) 
                     .create();
         } catch (PulsarClientException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Map<TopicPartition, PartitionInfo> readPartitionsInfo(String topic) {
+    @VisibleForTesting
+    public void scheduleRefreshPartitionMetadata(String topic, long autoUpdatePartitionDurationMs) {
+        executor.scheduleAtFixedRate(() -> {
+            int partitions = getPartitions(topic);
+            Map<TopicPartition, PartitionInfo> partitionMap = readPartitionsInfo(topic);
+            if (partitionMap.size() != partitions) {
+                synchronized (this) {
+                    cluster = cluster.withPartitions(partitionMap);
+                }
+                log.info("Updated partitions {} -> {} for topic {}", partitionMap.size(), partitions, topic);
+            }
+        }, autoUpdatePartitionDurationMs, autoUpdatePartitionDurationMs, TimeUnit.MILLISECONDS);
+    }
+
+    public Map<TopicPartition, PartitionInfo> readPartitionsInfo(String topic) {
         List<String> partitions = client.getPartitionsForTopic(topic).join();
 
         Map<TopicPartition, PartitionInfo> partitionsInfo = new HashMap<>();
@@ -381,6 +421,11 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
             logger.debug("could not get publish time");
         }
         return new RecordMetadata(tp, offset, 0L, publishTime, 0L, mb.hasKey() ? mb.getKey().length() : 0, size);
+    }
+
+    public int getPartitions(String topic) {
+        Integer partitions = cluster.partitionCountForTopic(topic);
+        return partitions != null ? partitions : 0;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(PulsarKafkaProducer.class);
