@@ -60,6 +60,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionType;
+import org.apache.pulsar.client.impl.MultiTopicsConsumerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.TopicMessageIdImpl;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
@@ -519,7 +520,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
             lastCommittedOffset.put(tp, offsetAndMetadata);
             MessageId msgId = MessageIdUtils.getMessageId(offsetAndMetadata.offset());
-            if (topicPartition.partition() != -1) {
+            if (consumer instanceof MultiTopicsConsumerImpl) {
                 msgId = new TopicMessageIdImpl(topicPartition.topic(), tp.topic(), msgId);
             }
             futures.add(consumer.acknowledgeCumulativeAsync(msgId));
