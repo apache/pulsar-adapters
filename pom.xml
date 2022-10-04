@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>23</version>
+    <version>27</version>
   </parent>
 
   <groupId>org.apache.pulsar</groupId>
@@ -97,6 +97,7 @@
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <test.additional.args></test.additional.args>
     <testReuseFork>true</testReuseFork>
