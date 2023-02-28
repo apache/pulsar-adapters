@@ -32,7 +32,7 @@
   <groupId>org.apache.pulsar</groupId>
   <artifactId>pulsar-adapters</artifactId>
 
-  <version>2.8.0-SNAPSHOT</version>
+  <version>2.11.0-SNAPSHOT</version>
 
   <name>Pulsar Adapters</name>
   <description>A collections of Pulsar adapters.</description>
@@ -76,12 +76,14 @@
   </issueManagement>
 
   <properties>
-    <pulsar.version>2.8.0</pulsar.version>
+    <pulsar.version>2.11.0</pulsar.version>
     <storm.version>2.0.0</storm.version>
     <kafka-client.version>2.7.0</kafka-client.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
     <avro.version>1.10.2</avro.version>
-    <log4j2.version>2.17.1</log4j2.version>
+    <log4j.version>1.2.17</log4j.version>
+    <log4j2.version>2.18.0</log4j2.version>
+    <powermock.version>2.0.9</powermock.version>
 
     <lombok.version>1.18.20</lombok.version>
     <puppycrawl.checkstyle.version>8.37</puppycrawl.checkstyle.version>
@@ -146,15 +148,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Can be removed when log4j2 version from Pulsar is 2.17+ -->
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-bom</artifactId>
-        <version>${log4j2.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
       <dependency>
         <groupId>org.apache.pulsar</groupId>
         <artifactId>pulsar</artifactId>
@@ -246,6 +239,18 @@
       </dependency>
 
       <dependency>
+        <artifactId>log4j</artifactId>
+        <groupId>log4j</groupId>
+        <version>${log4j.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jmx</groupId>
+            <artifactId>jmxri</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.storm</groupId>
         <artifactId>storm-client</artifactId>
         <version>${storm.version}</version>
@@ -276,6 +281,18 @@
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-protobuf</artifactId>
         <version>${avro.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito2</artifactId>
+        <version>${powermock.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-testng</artifactId>
+        <version>${powermock.version}</version>
       </dependency>
 
     </dependencies>
@@ -854,7 +871,16 @@
         <!-- see https://github.com/apache/pulsar/issues/8445 -->
         <maven.compiler.release>${maven.compiler.target}</maven.compiler.release>
         <!-- required for running tests on JDK11+ -->
-        <test.additional.args> --add-opens java.base/jdk.internal.loader=ALL-UNNAMED </test.additional.args>
+        <test.additional.args>
+          --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+          --add-opens java.base/java.lang=ALL-UNNAMED <!--Mockito-->
+          --add-opens java.base/java.io=ALL-UNNAMED <!--Bookkeeper NativeIO-->
+          --add-opens java.base/java.util=ALL-UNNAMED <!--System Lambda-->
+          --add-opens java.base/java.util.concurrent=ALL-UNNAMED <!--PowerMock-->
+          --add-opens java.base/sun.net=ALL-UNNAMED <!--netty.DnsResolverUtil-->
+          --add-opens java.management/sun.management=ALL-UNNAMED <!--JvmDefaultGCMetricsLogger & MBeanStatsGenerator-->
+          --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED <!--MBeanStatsGenerator-->
+        </test.additional.args>
       </properties>
       <build>
         <pluginManagement>

@@ -59,10 +59,9 @@ public class PulsarKafkaProducerTest {
         Field field = ProducerBuilderImpl.class.getDeclaredField("conf");
         field.setAccessible(true);
         ProducerConfigurationData conf = (ProducerConfigurationData) field.get(producerBuilder);
-        System.out.println("getMaxPendingMessages= " + conf.getMaxPendingMessages());
         assertEquals(conf.getCompressionType(), CompressionType.NONE);
         assertEquals(conf.isBlockIfQueueFull(), true);
-        assertEquals(conf.getMaxPendingMessages(), 1000);
+        assertEquals(conf.getMaxPendingMessages(), 0);
         assertEquals(conf.getBatchingMaxPublishDelayMicros(), TimeUnit.MILLISECONDS.toMicros(1));
         assertEquals(conf.getBatchingMaxMessages(), 1000);
     }
