@@ -133,6 +133,13 @@ public class PulsarKafkaProducerTest {
         verify(mockClientBuilder, times(1)).keepAliveInterval(1000, TimeUnit.SECONDS);
         verify(mockProducerBuilder, times(1)).sendTimeout(1000000, TimeUnit.MILLISECONDS);
         verify(mockProducerBuilder, times(1)).blockIfQueueFull(false);
+
+        // validate configs change
+        properties.put(PulsarProducerKafkaConfig.BLOCK_IF_PRODUCER_QUEUE_FULL, Boolean.TRUE.toString());
+        producer = new PulsarKafkaProducer<>(properties);
+        producer.close();
+
+        verify(mockProducerBuilder, times(1)).blockIfQueueFull(true);
     }
 
     @Test
