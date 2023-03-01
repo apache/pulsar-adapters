@@ -54,6 +54,10 @@ for line in "${FILES_TO_RENAME[@]}"; do
     fi
 done
 
+touch -r META-INF/MANIFEST.MF META-INF/LICENSE.netty
+touch -r META-INF/maven META-INF/native
+touch -r META-INF/maven META-INF
+
 # Overwrite the original ZIP archive
 rm $JAR_PATH
 zip -q -r $JAR_PATH .
