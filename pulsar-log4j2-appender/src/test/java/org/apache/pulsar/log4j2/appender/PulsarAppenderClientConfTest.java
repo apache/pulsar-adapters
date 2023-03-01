@@ -62,7 +62,8 @@ public class PulsarAppenderClientConfTest extends AbstractPulsarAppenderTest {
         assertTrue(authData.hasDataForHttp());
         Map<String, String> headers =
                 authData.getHttpHeaders().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        assertEquals(headers.size(), 1);
+        assertEquals(headers.size(), 2);
+        assertEquals(headers.get("X-Pulsar-Auth-Method-Name"), "token");
         assertEquals(headers.get("Authorization"), "Bearer TOKEN");
 
         // verify tlsAllowInsecureConnection

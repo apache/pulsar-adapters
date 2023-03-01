@@ -39,6 +39,7 @@ import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.ConsumerBuilderImpl;
 import org.apache.pulsar.client.impl.DefaultCryptoKeyReader;
 import org.apache.pulsar.client.impl.ProducerBuilderImpl;
@@ -88,7 +89,7 @@ public class PulsarCliebtKafkaConfigTest {
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, Arrays.asList("pulsar://localhost:6650"));
         properties.put(PulsarProducerKafkaConfig.CRYPTO_READER_FACTORY_CLASS_NAME, CryptoKeyReaderFactoryImpl.class.getName());
         PulsarClient client = mock(PulsarClient.class);
-        ConsumerBuilderImpl<byte[]> consumerBuilder = new ConsumerBuilderImpl<>(null, null);
+        ConsumerBuilderImpl<byte[]> consumerBuilder = new ConsumerBuilderImpl<>(null, Schema.BYTES);
         doReturn(consumerBuilder).when(client).newConsumer();
         PulsarConsumerKafkaConfig.getConsumerBuilder(client , properties);
         assertEquals(consumerBuilder.getConf().getCryptoKeyReader(), CryptoKeyReaderFactoryImpl.reader);
