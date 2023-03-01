@@ -44,3 +44,8 @@ github:
     merge:   false
     # disable rebase button:
     rebase:  false
+
+notifications:
+  commits:      commits@pulsar.apache.org
+  issues:       commits@pulsar.apache.org
+  pullrequests: commits@pulsar.apache.org
