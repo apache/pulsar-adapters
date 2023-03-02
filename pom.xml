@@ -31,7 +31,7 @@
   <groupId>org.apache.pulsar</groupId>
   <artifactId>pulsar-adapters</artifactId>
 
-  <version>2.11.0</version>
+  <version>2.11.1-SNAPSHOT</version>
 
   <name>Pulsar Adapters</name>
   <description>A collections of Pulsar adapters.</description>
@@ -99,7 +99,7 @@
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <project.build.outputTimestamp>1677775159</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1677775319</project.build.outputTimestamp>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <test.additional.args />
     <testReuseFork>true</testReuseFork>
