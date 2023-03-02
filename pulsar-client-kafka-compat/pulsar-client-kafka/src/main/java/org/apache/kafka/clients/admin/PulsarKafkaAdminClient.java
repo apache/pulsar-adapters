@@ -35,10 +35,12 @@ import org.apache.kafka.common.quota.ClientQuotaFilter;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminBuilder;
 import org.apache.pulsar.client.admin.PulsarAdminException;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.impl.MessageIdImpl;
+import org.apache.pulsar.client.impl.TopicMessageIdImpl;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
 import org.apache.pulsar.common.naming.TopicName;
-import org.apache.pulsar.functions.utils.FunctionCommon;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -155,7 +157,7 @@ public class PulsarKafkaAdminClient implements Admin {
                         .getLastMessageIdAsync(topicName)
                         .whenComplete((msgId, ex) -> {
                             if (ex == null) {
-                                long offset = FunctionCommon.getSequenceId(msgId);
+                                long offset = getSequenceId(msgId);
                                 future.complete(new ListOffsetsResult.ListOffsetsResultInfo(
                                         offset,
                                         System.currentTimeMillis(),
@@ -167,6 +169,13 @@ public class PulsarKafkaAdminClient implements Admin {
                         });
             });
         return new ListOffsetsResult(new HashMap<>(futures));
+    }
+
+    private static long getSequenceId(MessageId messageId) {
+        MessageIdImpl msgId = (MessageIdImpl)(messageId instanceof TopicMessageIdImpl ? ((TopicMessageIdImpl)messageId).getInnerMessageId() : messageId);
+        long ledgerId = msgId.getLedgerId();
+        long entryId = msgId.getEntryId();
+        return ledgerId << 28 | entryId;
     }
 
     @Override
