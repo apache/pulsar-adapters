@@ -414,7 +414,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                 }
 
                 ConsumerRecord<K, V> consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp,
-                        timestampType, -1, msg.hasKey() ? msg.getKey().length() : 0, msg.getData().length, key, value, headers);
+                        timestampType, -1L, msg.hasKey() ? msg.getKey().length() : 0, msg.getData().length, key, value, headers);
 
                 records.computeIfAbsent(tp, k -> new ArrayList<>()).add(consumerRecord);
 
