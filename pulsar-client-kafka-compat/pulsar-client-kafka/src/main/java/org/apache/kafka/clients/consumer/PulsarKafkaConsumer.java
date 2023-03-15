@@ -47,6 +47,8 @@ import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -70,6 +72,7 @@ import org.apache.pulsar.client.util.ConsumerName;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.FutureUtil;
+import org.bouncycastle.util.encoders.Hex;
 
 @Slf4j
 public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListener<byte[]> {
@@ -405,8 +408,13 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                     timestampType = TimestampType.CREATE_TIME;
                 }
 
+                Headers headers = new RecordHeaders();
+                if (msg.getProperties() != null) {
+                    msg.getProperties().forEach((k, v) -> headers.add(k, Hex.decode(v)));
+                }
+
                 ConsumerRecord<K, V> consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp,
-                        timestampType, -1, msg.hasKey() ? msg.getKey().length() : 0, msg.getData().length, key, value);
+                        timestampType, -1, msg.hasKey() ? msg.getKey().length() : 0, msg.getData().length, key, value, headers);
 
                 records.computeIfAbsent(tp, k -> new ArrayList<>()).add(consumerRecord);
 

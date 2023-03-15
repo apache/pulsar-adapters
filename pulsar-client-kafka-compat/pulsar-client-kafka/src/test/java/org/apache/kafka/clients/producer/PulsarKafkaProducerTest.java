@@ -43,6 +43,8 @@ import org.apache.avro.reflect.Nullable;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.ProducerBuilder;
@@ -246,7 +248,13 @@ public class PulsarKafkaProducerTest {
         foo.setField2("field2");
         foo.setField3(3);
 
-        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1,foo, bar));
+        Headers headers = new RecordHeaders();
+        String header1 = "header1";
+        String header2 = "header2";
+        headers.add(header1,header1.getBytes());
+        headers.add(header2,header2.getBytes());
+
+        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1,foo, bar, headers));
 
         // Verify
         verify(mockTypedMessageBuilder, times(1)).sendAsync();

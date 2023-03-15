@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Cluster;
@@ -385,6 +386,13 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
             // Get the partition id from the partitioner
             int partition = partitioner.partition(record.topic(), record.key(), keyBytes, record.value(), value, cluster);
             builder.property(KafkaMessageRouter.PARTITION_ID, Integer.toString(partition));
+        }
+
+        if (record.headers() != null) {
+            Map<String, String> headerProperties = new HashMap<>();
+            record.headers()
+                    .forEach(header -> headerProperties.putIfAbsent(header.key(), Hex.encodeHexString(header.value())));
+            builder.properties(headerProperties);
         }
 
         return value.length;
