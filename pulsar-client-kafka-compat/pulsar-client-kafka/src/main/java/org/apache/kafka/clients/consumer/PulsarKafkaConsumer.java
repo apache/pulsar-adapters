@@ -414,7 +414,8 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                 }
 
                 ConsumerRecord<K, V> consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp,
-                        timestampType, -1L, msg.hasKey() ? msg.getKey().length() : 0, msg.getData().length, key, value, headers);
+                        timestampType, -1L, msg.hasKey() ? msg.getKey().length() : 0,
+                        msg.getData() != null ? msg.getData().length : 0, key, value, headers);
 
                 records.computeIfAbsent(tp, k -> new ArrayList<>()).add(consumerRecord);
 
@@ -528,10 +529,12 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
             lastCommittedOffset.put(tp, offsetAndMetadata);
             MessageId msgId = MessageIdUtils.getMessageId(offsetAndMetadata.offset());
-            if (consumer instanceof MultiTopicsConsumerImpl) {
-                msgId = new TopicMessageIdImpl(topicPartition.topic(), tp.topic(), msgId);
+            if (consumer != null) {
+                if (consumer instanceof MultiTopicsConsumerImpl) {
+                    msgId = new TopicMessageIdImpl(topicPartition.topic(), tp.topic(), msgId);
+                }
+                futures.add(consumer.acknowledgeCumulativeAsync(msgId));
             }
-            futures.add(consumer.acknowledgeCumulativeAsync(msgId));
         });
 
         return FutureUtil.waitForAll(futures);
