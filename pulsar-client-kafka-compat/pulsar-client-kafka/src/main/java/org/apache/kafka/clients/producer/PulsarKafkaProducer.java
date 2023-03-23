@@ -18,6 +18,7 @@
  */
 package org.apache.kafka.clients.producer;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -36,8 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import org.apache.commons.codec.binary.Hex;
+import lombok.Getter;
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Cluster;
@@ -64,10 +64,6 @@ import org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import lombok.Getter;
 
 public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
@@ -391,7 +387,7 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
         if (record.headers() != null) {
             Map<String, String> headerProperties = new HashMap<>();
             record.headers()
-                    .forEach(header -> headerProperties.putIfAbsent(header.key(), Hex.encodeHexString(header.value())));
+                    .forEach(header -> headerProperties.putIfAbsent(header.key(), new String(header.value())));
             builder.properties(headerProperties);
         }
 

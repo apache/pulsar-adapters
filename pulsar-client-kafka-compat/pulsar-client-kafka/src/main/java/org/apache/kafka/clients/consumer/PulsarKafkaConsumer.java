@@ -72,7 +72,6 @@ import org.apache.pulsar.client.util.ConsumerName;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.FutureUtil;
-import org.bouncycastle.util.encoders.Hex;
 
 @Slf4j
 public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListener<byte[]> {
@@ -410,7 +409,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
                 Headers headers = new RecordHeaders();
                 if (msg.getProperties() != null) {
-                    msg.getProperties().forEach((k, v) -> headers.add(k, Hex.decode(v)));
+                    msg.getProperties().forEach((k, v) -> headers.add(k, v.getBytes()));
                 }
 
                 ConsumerRecord<K, V> consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp,
