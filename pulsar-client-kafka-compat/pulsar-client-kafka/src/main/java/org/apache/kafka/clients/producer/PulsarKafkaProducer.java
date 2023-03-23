@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.kafka.clients.constants.MessageConstants;
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Cluster;
@@ -385,10 +387,11 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
         }
 
         if (record.headers() != null) {
-            Map<String, String> headerProperties = new HashMap<>();
-            record.headers()
-                    .forEach(header -> headerProperties.putIfAbsent(header.key(), new String(header.value())));
-            builder.properties(headerProperties);
+            record.headers().forEach(header -> {
+                String key = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header.key();
+                builder.property(key, Hex.encodeHexString(header.value()));
+                log.debug("Formatted Kafka Specific Headers Before : {}, After : {}", header.key(), key);
+            });
         }
 
         return value.length;

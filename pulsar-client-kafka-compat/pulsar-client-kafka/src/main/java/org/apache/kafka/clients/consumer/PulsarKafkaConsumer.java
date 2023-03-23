@@ -43,6 +43,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.kafka.clients.constants.MessageConstants;
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.PartitionInfo;
@@ -406,16 +409,28 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                     timestamp = msg.getEventTime();
                     timestampType = TimestampType.CREATE_TIME;
                 }
-
-                Headers headers = new RecordHeaders();
+                ConsumerRecord<K, V> consumerRecord;
                 if (msg.getProperties() != null) {
-                    msg.getProperties().forEach((k, v) -> headers.add(k, v.getBytes()));
+                    Headers headers = new RecordHeaders();
+                    msg.getProperties().forEach((k, v) -> {
+                        if (k.startsWith(MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX)) {
+                            String originalKey = k.replace(MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX, "");
+                            try {
+                                headers.add(originalKey, Hex.decodeHex(v));
+                            } catch (DecoderException e) {
+                                log.warn("Corrupted Header Key : {}", originalKey);
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                    consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp, timestampType, -1L,
+                            msg.hasKey() ? msg.getKey().length() : 0, msg.getData() != null ? msg.getData().length : 0,
+                            key, value, headers);
+                } else {
+                    consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp, timestampType, -1L,
+                            msg.hasKey() ? msg.getKey().length() : 0, msg.getData() != null ? msg.getData().length : 0,
+                            key, value);
                 }
-
-                ConsumerRecord<K, V> consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp,
-                        timestampType, -1L, msg.hasKey() ? msg.getKey().length() : 0,
-                        msg.getData() != null ? msg.getData().length : 0, key, value, headers);
-
                 records.computeIfAbsent(tp, k -> new ArrayList<>()).add(consumerRecord);
 
                 // Update last offset seen by application
