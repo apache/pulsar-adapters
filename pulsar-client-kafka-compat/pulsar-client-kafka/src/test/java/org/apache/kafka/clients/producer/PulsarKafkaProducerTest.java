@@ -30,7 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-
+import com.google.api.client.util.Maps;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,8 +38,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.apache.avro.reflect.Nullable;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.kafka.clients.constants.MessageConstants;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
@@ -57,8 +61,6 @@ import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
 import org.apache.pulsar.client.impl.schema.AvroSchema;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
 import org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -66,12 +68,6 @@ import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
-
-import com.google.api.client.util.Maps;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @PrepareForTest({PulsarClientKafkaConfig.class, PulsarProducerKafkaConfig.class})
 @PowerMockIgnore({"org.apache.logging.log4j.*", "org.apache.kafka.clients.producer.ProducerInterceptor"})
@@ -106,12 +102,12 @@ public class PulsarKafkaProducerTest {
         ClientBuilder mockClientBuilder = mock(ClientBuilder.class);
         ProducerBuilder mockProducerBuilder = mock(ProducerBuilder.class);
         doAnswer(invocation -> {
-            Assert.assertEquals((int)invocation.getArguments()[0], 1000000, "Send time out is suppose to be 1000.");
+            Assert.assertEquals((int) invocation.getArguments()[0], 1000000, "Send time out is suppose to be 1000.");
             return mockProducerBuilder;
         }).when(mockProducerBuilder).sendTimeout(anyInt(), any(TimeUnit.class));
         doReturn(mockClientBuilder).when(mockClientBuilder).serviceUrl(anyString());
         doAnswer(invocation -> {
-            Assert.assertEquals((int)invocation.getArguments()[0], 1000, "Keep alive interval is suppose to be 1000.");
+            Assert.assertEquals((int) invocation.getArguments()[0], 1000, "Keep alive interval is suppose to be 1000.");
             return mockClientBuilder;
         }).when(mockClientBuilder).keepAliveInterval(anyInt(), any(TimeUnit.class));
 
@@ -163,18 +159,19 @@ public class PulsarKafkaProducerTest {
         doReturn(mockPartitionFuture).when(mockClient).getPartitionsForTopic(anyString());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).topic(anyString());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).clone();
-        doReturn(mockProducerBuilder).when(mockProducerBuilder).intercept(
-                (org.apache.pulsar.client.api.ProducerInterceptor) any());
+        doReturn(mockProducerBuilder).when(mockProducerBuilder)
+                .intercept((org.apache.pulsar.client.api.ProducerInterceptor) any());
         doReturn(mockProducer).when(mockProducerBuilder).create();
         doReturn(mockTypedMessageBuilder).when(mockProducer).newMessage();
         doReturn(mockSendAsyncFuture).when(mockTypedMessageBuilder).sendAsync();
         PowerMockito.mockStatic(PulsarClientKafkaConfig.class);
         PowerMockito.mockStatic(PulsarProducerKafkaConfig.class);
         when(PulsarClientKafkaConfig.getClientBuilder(any(Properties.class))).thenReturn(mockClientBuilder);
-        when(PulsarProducerKafkaConfig.getProducerBuilder(any(PulsarClient.class), any(Properties.class))).thenReturn(mockProducerBuilder);
+        when(PulsarProducerKafkaConfig.getProducerBuilder(any(PulsarClient.class), any(Properties.class))).thenReturn(
+                mockProducerBuilder);
 
         Properties properties = new Properties();
-        List interceptors =  new ArrayList();
+        List interceptors = new ArrayList();
         interceptors.add("org.apache.kafka.clients.producer.PulsarKafkaProducerTest$PulsarKafkaProducerInterceptor");
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -187,11 +184,10 @@ public class PulsarKafkaProducerTest {
         // Act
         PulsarKafkaProducer<String, String> pulsarKafkaProducer = new PulsarKafkaProducer<>(properties);
 
-        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1,"key", "value"));
+        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1, "key", "value"));
 
         // Verify
-        verify(mockProducerBuilder, atLeastOnce()).intercept(
-                (org.apache.pulsar.client.api.ProducerInterceptor)any());
+        verify(mockProducerBuilder, atLeastOnce()).intercept((org.apache.pulsar.client.api.ProducerInterceptor) any());
     }
 
     @Test
@@ -214,18 +210,19 @@ public class PulsarKafkaProducerTest {
         doReturn(mockProducerBuilder).when(mockProducerBuilder).topic(anyString());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).autoUpdatePartitionsInterval(anyInt(), any());
         doReturn(mockProducerBuilder).when(mockProducerBuilder).clone();
-        doReturn(mockProducerBuilder).when(mockProducerBuilder).intercept(
-                (org.apache.pulsar.client.api.ProducerInterceptor) any());
+        doReturn(mockProducerBuilder).when(mockProducerBuilder)
+                .intercept((org.apache.pulsar.client.api.ProducerInterceptor) any());
         doReturn(mockProducer).when(mockProducerBuilder).create();
         doReturn(mockTypedMessageBuilder).when(mockProducer).newMessage();
         doReturn(mockSendAsyncFuture).when(mockTypedMessageBuilder).sendAsync();
         PowerMockito.mockStatic(PulsarClientKafkaConfig.class);
         PowerMockito.mockStatic(PulsarProducerKafkaConfig.class);
         when(PulsarClientKafkaConfig.getClientBuilder(any(Properties.class))).thenReturn(mockClientBuilder);
-        when(PulsarProducerKafkaConfig.getProducerBuilder(any(PulsarClient.class), any(Properties.class))).thenReturn(mockProducerBuilder);
+        when(PulsarProducerKafkaConfig.getProducerBuilder(any(PulsarClient.class), any(Properties.class))).thenReturn(
+                mockProducerBuilder);
 
         Properties properties = new Properties();
-        List interceptors =  new ArrayList();
+        List interceptors = new ArrayList();
         interceptors.add("org.apache.kafka.clients.producer.PulsarKafkaProducerTest$PulsarKafkaProducerInterceptor");
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -251,18 +248,26 @@ public class PulsarKafkaProducerTest {
         Headers headers = new RecordHeaders();
         String header1 = "header1";
         String header2 = "header2";
-        headers.add(header1,header1.getBytes());
-        headers.add(header2,header2.getBytes());
+        headers.add(header1, header1.getBytes());
+        headers.add(header2, header2.getBytes());
+        String keyHeader1 = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header1;
+        String keyHeader2 = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header2;
 
-        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1,foo, bar, headers));
+        pulsarKafkaProducer.send(new ProducerRecord<>("topic", 1, foo, bar, headers));
+
 
         // Verify
         verify(mockTypedMessageBuilder, times(1)).sendAsync();
-        verify(mockProducerBuilder, times(1)).intercept(
-                (org.apache.pulsar.client.api.ProducerInterceptor) any());
+        verify(mockProducerBuilder, times(1)).intercept((org.apache.pulsar.client.api.ProducerInterceptor) any());
+
+        verify(mockTypedMessageBuilder, times(1)).property(keyHeader1, Hex.encodeHexString(header1.getBytes()));
+        verify(mockTypedMessageBuilder, times(1)).property(keyHeader2, Hex.encodeHexString(header2.getBytes()));
+
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "Invalid value 2147483648000 for 'connections.max.idle.ms'. Please use a value smaller than 2147483647000 milliseconds.")
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "Invalid value "
+            + "2147483648000 for 'connections.max.idle.ms'. Please use a value smaller than 2147483647000 "
+            + "milliseconds.")
     public void testPulsarKafkaProducerKeepAliveIntervalIllegalArgumentException() {
         Properties properties = new Properties();
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -280,12 +285,12 @@ public class PulsarKafkaProducerTest {
         ClientBuilder mockClientBuilder = mock(ClientBuilder.class);
         ProducerBuilder mockProducerBuilder = mock(ProducerBuilder.class);
         doAnswer(invocation -> {
-            Assert.assertEquals((int)invocation.getArguments()[0], 1000000, "Send time out is suppose to be 1000.");
+            Assert.assertEquals((int) invocation.getArguments()[0], 1000000, "Send time out is suppose to be 1000.");
             return mockProducerBuilder;
         }).when(mockProducerBuilder).sendTimeout(anyInt(), any(TimeUnit.class));
         doReturn(mockClientBuilder).when(mockClientBuilder).serviceUrl(anyString());
         doAnswer(invocation -> {
-            Assert.assertEquals((int)invocation.getArguments()[0], 1000, "Keep alive interval is suppose to be 1000.");
+            Assert.assertEquals((int) invocation.getArguments()[0], 1000, "Keep alive interval is suppose to be 1000.");
             return mockClientBuilder;
         }).when(mockClientBuilder).keepAliveInterval(anyInt(), any(TimeUnit.class));
 
@@ -321,7 +326,8 @@ public class PulsarKafkaProducerTest {
         producer.close();
     }
 
-    public static class PulsarKafkaProducerInterceptor implements org.apache.kafka.clients.producer.ProducerInterceptor<String, String> {
+    public static class PulsarKafkaProducerInterceptor
+            implements org.apache.kafka.clients.producer.ProducerInterceptor<String, String> {
 
         @Override
         public ProducerRecord onSend(ProducerRecord record) {

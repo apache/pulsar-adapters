@@ -27,7 +27,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.kafka.clients.constants.MessageConstants;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.pulsar.client.api.ClientBuilder;
@@ -35,8 +40,13 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Schema;
+import org.apache.pulsar.client.impl.MessageImpl;
+import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.util.MessageIdUtils;
+import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.common.naming.TopicName;
+import org.junit.Assert;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -64,15 +74,31 @@ public class PulsarKafkaConsumerTest {
 
         ClientBuilder mockClientBuilder = mock(ClientBuilder.class);
         Consumer consumer = mock(Consumer.class);
-        Message msg = mock(Message.class);
         MessageId msgId = mock(MessageId.class);
+        MessageMetadata messageMetadata = new MessageMetadata();
+        messageMetadata.setPublishTime(System.currentTimeMillis());
+
+        Map<String, String> headerMap = new HashMap<>();
+        String header1 = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + "header1";
+        String kafkaHeader = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header1;
+        headerMap.put(kafkaHeader,
+                Hex.encodeHexString(header1.getBytes()));
+        Message<byte[]> msg =
+                new MessageImpl<byte[]>("topic", "1:1", headerMap, "string".getBytes(), Schema.BYTES,
+                        messageMetadata);
+
 
         PulsarClient mockClient = mock(PulsarClient.class);
+        PulsarClientImpl mockClientImpl = mock(PulsarClientImpl.class);
+
+        CompletableFuture<Integer> mockNoOfPartitionFuture = new CompletableFuture<Integer>();
+        mockNoOfPartitionFuture.complete(1);
 
         doReturn(mockClientBuilder).when(mockClientBuilder).serviceUrl(anyString());
         when(TopicName.get(any())).thenReturn(topicName);
-        when(msg.getMessageId()).thenReturn(msgId);
         doReturn(mockClient).when(mockClientBuilder).build();
+
+        when(mockClientImpl.getNumberOfPartitions(anyString())).thenReturn(mockNoOfPartitionFuture);
 
         Properties properties = new Properties();
 
@@ -94,6 +120,10 @@ public class PulsarKafkaConsumerTest {
         pulsarKafkaConsumer.received(consumer, msg);
         pulsarKafkaConsumer.poll(100);
         pulsarKafkaConsumer.close();
+
+
+        Assert.assertNotNull(msg.getProperty(kafkaHeader));
+
     }
 
     @Test
