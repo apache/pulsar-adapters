@@ -25,6 +25,8 @@ This repository is used for hosting all the adapters maintained and supported by
 
 [Apache Flink adapter](https://github.com/apache/flink-connector-pulsar) is supported and maintained by Apache Flink Community.
 
+[Apache Storm bolt and spout](https://github.com/apache/storm/tree/master/external/storm-pulsar) are supported by Apache Storm Community.
+
 ## Building
 
 In order to build this code you can simply use Maven
@@ -42,5 +44,5 @@ git checkout v2.11.0
 mvn clean install -DskipTests
 ```
 
-This is because this repository depends on test integration artifacts of the relative version on the main 
+This is because this repository depends on test integration artifacts of the relative version on the main
 Apache Pulsar codebase
