@@ -64,8 +64,9 @@ public class PulsarKafkaConsumerTest {
 
         Map<String, String> headerMap = new HashMap<>();
         String header1 = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + "header1";
-        String kafkaHeader = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header1;
-        headerMap.put(kafkaHeader, Hex.encodeHexString(header1.getBytes()));
+        String kafkaHeaderKey = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header1;
+        String kafkaHeaderValue = Hex.encodeHexString(kafkaHeaderKey.getBytes());
+        headerMap.put(kafkaHeaderKey, kafkaHeaderValue);
         Message<byte[]> msg =
                 new MessageImpl<byte[]>(topic, "1:1", headerMap, "string".getBytes(), Schema.BYTES, messageMetadata);
 
@@ -97,7 +98,7 @@ public class PulsarKafkaConsumerTest {
         pulsarKafkaConsumerSpy.poll(100);
         pulsarKafkaConsumerSpy.close();
 
-        Assert.assertNotNull(msg.getProperty(kafkaHeader));
+        Assert.assertEquals(kafkaHeaderValue,msg.getProperty(kafkaHeaderKey));
         Mockito.verify(pulsarKafkaConsumerSpy).seekToEnd(anyCollection());
         Mockito.verify(consumer, Mockito.times(0)).acknowledgeCumulativeAsync(Mockito.any(MessageId.class));
         Mockito.verify(hex, Mockito.times(1)).decodeHex(Hex.encodeHexString(header1.getBytes()));
