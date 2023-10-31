@@ -33,6 +33,7 @@
   <name>Apache Pulsar Adapters :: Tests</name>
   <modules>
     <module>pulsar-kafka-compat-client-test</module>
+    <module>pulsar-storm-test</module>
     <module>pulsar-spark-test</module>
   </modules>
   <build>
