@@ -27,6 +27,7 @@ github:
     - streaming
     - queuing
     - event-streaming
+    - apache-storm
     - apache-spark
     - apache-kafka
   features:

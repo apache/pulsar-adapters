@@ -78,6 +78,7 @@
   <properties>
     <pulsar.version>2.11.0</pulsar.version>
     <kafka-client.version>2.7.2</kafka-client.version>
+    <storm.version>2.0.0</storm.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
     <avro.version>1.10.2</avro.version>
     <log4j.version>1.2.17</log4j.version>
@@ -139,6 +140,7 @@
   </properties>
 
   <modules>
+    <module>pulsar-storm</module>
     <module>pulsar-spark</module>
     <module>pulsar-client-kafka-compat</module>
     <module>pulsar-log4j2-appender</module>
@@ -248,6 +250,22 @@
             <artifactId>jmxri</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.storm</groupId>
+        <artifactId>storm-client</artifactId>
+        <version>${storm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.storm</groupId>
+        <artifactId>storm-server</artifactId>
+        <version>${storm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.storm</groupId>
+        <artifactId>storm-core</artifactId>
+        <version>${storm.version}</version>
       </dependency>
 
       <dependency>
@@ -1068,3 +1086,4 @@
   </repositories>
 
 </project>
+
