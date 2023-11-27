@@ -35,6 +35,7 @@ public class PulsarConsumerKafkaConfig {
     public static final String ACKNOWLEDGEMENTS_GROUP_TIME_MILLIS = "pulsar.consumer.acknowledgments.group.time.millis";
     public static final String TOTAL_RECEIVER_QUEUE_SIZE_ACROSS_PARTITIONS = "pulsar.consumer.total.receiver.queue.size.across.partitions";
     public static final String SUBSCRIPTION_TOPICS_MODE = "pulsar.consumer.subscription.topics.mode";
+    public static final String REPLICATE_SUBSCRIPTION_STATE = "pulsar.consumer.replicate.subscription.state";
 
     public static ConsumerBuilder<byte[]> getConsumerBuilder(PulsarClient client, Properties properties) {
         ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer();
@@ -55,6 +56,11 @@ public class PulsarConsumerKafkaConfig {
         if (properties.containsKey(ACKNOWLEDGEMENTS_GROUP_TIME_MILLIS)) {
             consumerBuilder.acknowledgmentGroupTime(
                     Long.parseLong(properties.getProperty(ACKNOWLEDGEMENTS_GROUP_TIME_MILLIS)), TimeUnit.MILLISECONDS);
+        }
+
+        if (properties.containsKey(REPLICATE_SUBSCRIPTION_STATE)) {
+            consumerBuilder.replicateSubscriptionState(
+                    Boolean.parseBoolean(properties.getProperty(REPLICATE_SUBSCRIPTION_STATE)));
         }
 
         if (properties.containsKey(SUBSCRIPTION_TOPICS_MODE)) {

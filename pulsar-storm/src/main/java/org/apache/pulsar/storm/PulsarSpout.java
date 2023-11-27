@@ -92,7 +92,7 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     public PulsarSpout(PulsarSpoutConfiguration pulsarSpoutConf) {
         this(pulsarSpoutConf, PulsarClient.builder());
     }
-    
+
     public PulsarSpout(PulsarSpoutConfiguration pulsarSpoutConf, ClientBuilder clientBuilder) {
         this(pulsarSpoutConf, ((ClientBuilderImpl) clientBuilder).getClientConfigurationData().clone(),
                 new ConsumerConfigurationData<byte[]>());
@@ -120,16 +120,16 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     public void close() {
         try {
             LOG.info("[{}] Closing Pulsar consumer for topic {}", spoutId, pulsarSpoutConf.getTopic());
-            
+
             if (pulsarSpoutConf.isAutoUnsubscribe()) {
                 try {
-                    consumer.unsubscribe();    
-                }catch(PulsarClientException e) {
+                    consumer.unsubscribe();
+                } catch (PulsarClientException e) {
                     LOG.error("[{}] Failed to unsubscribe {} on topic {}", spoutId,
                             this.pulsarSpoutConf.getSubscriptionName(), pulsarSpoutConf.getTopic(), e);
                 }
             }
-            
+
             if (!pulsarSpoutConf.isSharedConsumerEnabled() && consumer != null) {
                 consumer.close();
             }
@@ -152,7 +152,8 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
             }
             consumer.acknowledgeAsync(msg);
             pendingMessageRetries.remove(msg.getMessageId());
-            // we should also remove message from failedMessages but it will be eventually removed while emitting next
+            // we should also remove message from failedMessages but it will be
+            // eventually removed while emitting next
             // tuple
             --pendingAcks;
         }
@@ -166,13 +167,15 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
             MessageId id = msg.getMessageId();
             LOG.warn("[{}] Error processing message {}", spoutId, id);
 
-            // Since the message processing failed, we put it in the failed messages queue if there are more retries
+            // Since the message processing failed, we put it in the failed
+            // messages queue if there are more retries
             // remaining for the message
             MessageRetries messageRetries = pendingMessageRetries.computeIfAbsent(id, (k) -> new MessageRetries());
             if ((failedRetriesTimeoutNano < 0
                     || (messageRetries.getTimeStamp() + failedRetriesTimeoutNano) > System.nanoTime())
                     && (maxFailedRetries < 0 || messageRetries.numRetries < maxFailedRetries)) {
-                // since we can retry again, we increment retry count and put it in the queue
+                // since we can retry again, we increment retry count and put it
+                // in the queue
                 LOG.info("[{}] Putting message {} in the retry queue", spoutId, id);
                 messageRetries.incrementAndGet();
                 pendingMessageRetries.putIfAbsent(id, messageRetries);
@@ -188,7 +191,8 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     }
 
     /**
-     * Emits a tuple received from the Pulsar consumer unless there are any failed messages
+     * Emits a tuple received from the Pulsar consumer unless there are any
+     * failed messages.
      */
     @Override
     public void nextTuple() {
@@ -196,14 +200,15 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     }
 
     /**
-     * It makes sure that it emits next available non-tuple to topology unless consumer queue doesn't have any message
-     * available. It receives message from consumer queue and converts it to tuple and emits to topology. if the
-     * converted tuple is null then it tries to receives next message and perform the same until it finds non-tuple to
-     * emit.
+     * It makes sure that it emits next available non-tuple to topology unless
+     * consumer queue doesn't have any message available. It receives message
+     * from consumer queue and converts it to tuple and emits to topology. if
+     * the converted tuple is null then it tries to receives next message and
+     * perform the same until it finds non-tuple to emit.
      */
     public void emitNextAvailableTuple() {
         // check if there are any failed messages to re-emit in the topology
-        if(emitFailedMessage()) {
+        if (emitFailedMessage()) {
             return;
         }
 
@@ -239,14 +244,16 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
         while ((msg = failedMessages.peek()) != null) {
             MessageRetries messageRetries = pendingMessageRetries.get(msg.getMessageId());
             if (messageRetries != null) {
-                // emit the tuple if retry doesn't need backoff else sleep with backoff time and return without doing
+                // emit the tuple if retry doesn't need backoff else sleep with
+                // backoff time and return without doing
                 // anything
                 if (Backoff.shouldBackoff(messageRetries.getTimeStamp(), TimeUnit.NANOSECONDS,
                         messageRetries.getNumRetries(), clientConf.getInitialBackoffIntervalNanos(),
                         clientConf.getMaxBackoffIntervalNanos())) {
                     Utils.sleep(TimeUnit.NANOSECONDS.toMillis(clientConf.getInitialBackoffIntervalNanos()));
                 } else {
-                    // remove the message from the queue and emit to the topology, only if it should not be backedoff
+                    // remove the message from the queue and emit to the
+                    // topology, only if it should not be backedoff
                     LOG.info("[{}] Retrying failed message {}", spoutId, msg.getMessageId());
                     failedMessages.remove();
                     mapToValueAndEmit(msg);
@@ -254,9 +261,10 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
                 return true;
             }
 
-            // messageRetries is null because messageRetries is already acked and removed from pendingMessageRetries
+            // messageRetries is null because messageRetries is already acked
+            // and removed from pendingMessageRetries
             // then remove it from failed message queue as well.
-            if(LOG.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 LOG.debug("[{}]-{} removing {} from failedMessage because it's already acked",
                         pulsarSpoutConf.getTopic(), spoutId, msg.getMessageId());
             }
@@ -298,10 +306,10 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
         } else {
             try {
                 consumer = pulsarSpoutConf.isDurableSubscription()
-                        ? new SpoutConsumer(sharedPulsarClient.getClient()
-                                .subscribeAsync(newConsumerConfiguration()).join())
-                        : new SpoutReader(sharedPulsarClient.getClient()
-                                .createReaderAsync(newReaderConfiguration()).join());
+                        ? new SpoutConsumer(
+                                sharedPulsarClient.getClient().subscribeAsync(newConsumerConfiguration()).join())
+                        : new SpoutReader(
+                                sharedPulsarClient.getClient().createReaderAsync(newReaderConfiguration()).join());
             } catch (CompletionException e) {
                 throw (PulsarClientException) e.getCause();
             }
@@ -320,7 +328,8 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
             Values values = pulsarSpoutConf.getMessageToValuesMapper().toValues(msg);
             ++pendingAcks;
             if (values == null) {
-                // since the mapper returned null, we can drop the message and ack it immediately
+                // since the mapper returned null, we can drop the message and
+                // ack it immediately
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[{}] Dropping message {}", spoutId, msg.getMessageId());
                 }
@@ -364,7 +373,7 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     }
 
     /**
-     * Helpers for metrics
+     * Helpers for metrics.
      */
 
     @SuppressWarnings({ "rawtypes" })
@@ -423,11 +432,11 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     static class SpoutConsumer implements PulsarSpoutConsumer {
         private Consumer<byte[]> consumer;
 
-        public SpoutConsumer(Consumer<byte[]> consumer) {
+        SpoutConsumer(Consumer<byte[]> consumer) {
             super();
             this.consumer = consumer;
         }
-        
+
         @Override
         public Message<byte[]> receive(int timeout, TimeUnit unit) throws PulsarClientException {
             return consumer.receive(timeout, unit);
@@ -453,7 +462,7 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
     static class SpoutReader implements PulsarSpoutConsumer {
         private Reader<byte[]> reader;
 
-        public SpoutReader(Reader<byte[]> reader) {
+        SpoutReader(Reader<byte[]> reader) {
             super();
             this.reader = reader;
         }

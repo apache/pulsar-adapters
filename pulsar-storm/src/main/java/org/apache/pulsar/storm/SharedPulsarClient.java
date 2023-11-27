@@ -48,21 +48,23 @@ public class SharedPulsarClient {
     private Reader<byte[]> reader;
     private Producer<byte[]> producer;
 
-    private SharedPulsarClient(String componentId, ClientConfigurationData clientConf)
-            throws PulsarClientException {
+    private SharedPulsarClient(String componentId, ClientConfigurationData clientConf) throws PulsarClientException {
         this.client = new PulsarClientImpl(clientConf);
         this.componentId = componentId;
     }
 
     /**
-     * Provides a shared pulsar client that is shared across all different tasks in the same component. Different
-     * components will not share the pulsar client since they can have different configurations.
+     * Provides a shared pulsar client that is shared across all different tasks
+     * in the same component. Different components will not share the pulsar
+     * client since they can have different configurations.
      *
      * @param componentId
-     *            the id of the spout/bolt
+     *            - the id of the spout/bolt
      * @param clientConf
-     * @return
+     *            - client config
+     * @return SharedPulsarClient
      * @throws PulsarClientException
+     *             in case of an error
      */
     public static SharedPulsarClient get(String componentId, ClientConfigurationData clientConf)
             throws PulsarClientException {

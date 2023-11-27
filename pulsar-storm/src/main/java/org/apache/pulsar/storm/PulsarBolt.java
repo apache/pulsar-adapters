@@ -46,9 +46,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PulsarBolt extends BaseRichBolt implements IMetric {
-    /**
-     *
-     */
+
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(PulsarBolt.class);
 
@@ -93,7 +91,7 @@ public class PulsarBolt extends BaseRichBolt implements IMetric {
         this.producerConf.setTopicName(pulsarBoltConf.getTopic());
         this.producerConf.setBatcherBuilder(null);
     }
-    
+
     @SuppressWarnings({ "rawtypes" })
     @Override
     public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
@@ -182,7 +180,7 @@ public class PulsarBolt extends BaseRichBolt implements IMetric {
     }
 
     /**
-     * Helpers for metrics
+     * Helpers for metrics.
      */
 
     @SuppressWarnings({ "rawtypes" })
