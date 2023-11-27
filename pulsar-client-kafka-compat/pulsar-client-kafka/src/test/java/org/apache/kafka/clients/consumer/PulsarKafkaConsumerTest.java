@@ -37,6 +37,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
+import org.apache.pulsar.client.kafka.compat.KafkaMessageRouter;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.common.naming.TopicName;
 import org.mockito.Mockito;
@@ -47,34 +48,35 @@ public class PulsarKafkaConsumerTest {
 
     @Test
     public void testPulsarKafkaConsumerWithHeaders_noAck() throws Exception {
-        TopicName topicName = Mockito.mock(TopicName.class);
-        Hex hex = Mockito.mock(Hex.class);
-
-        Mockito.when(topicName.getPartitionedTopicName()).thenReturn("topic");
-
-        ClientBuilder mockClientBuilder = Mockito.mock(ClientBuilder.class);
         Consumer consumer = Mockito.mock(Consumer.class);
-        Mockito.doReturn("topic").when(consumer).getTopic();
-        MessageId msgId = Mockito.mock(MessageId.class);
-        MessageMetadata messageMetadata = new MessageMetadata();
-        messageMetadata.setPublishTime(System.currentTimeMillis());
         String topic = "topic";
 
-        TopicName topicNameAll = TopicName.get(topic);
+        Mockito.when(Mockito.mock(TopicName.class).getPartitionedTopicName()).thenReturn(topic);
+        Mockito.doReturn("topic").when(consumer).getTopic();
+
+        MessageMetadata messageMetadata = new MessageMetadata();
+        messageMetadata.setPublishTime(System.currentTimeMillis());
 
         Map<String, String> headerMap = new HashMap<>();
-        String header1 = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + "header1";
-        String kafkaHeaderKey = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header1;
+        String kafkaHeaderKey = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + "header1";
         String kafkaHeaderValue = Hex.encodeHexString(kafkaHeaderKey.getBytes());
         headerMap.put(kafkaHeaderKey, kafkaHeaderValue);
-        Message<byte[]> msg =
-                new MessageImpl<byte[]>(topic, "1:1", headerMap, "string".getBytes(), Schema.BYTES, messageMetadata);
+        headerMap.put(KafkaMessageRouter.PARTITION_ID, "0");
+        Message<byte[]> msg = new MessageImpl<>(
+                topic,
+                "1:1",
+                headerMap,
+                "string".getBytes(),
+                Schema.BYTES,
+                messageMetadata
+        );
 
         PulsarClient mockClient = Mockito.mock(PulsarClient.class);
         PulsarClientImpl mockClientImpl = Mockito.mock(PulsarClientImpl.class);
 
         CompletableFuture<Integer> mockNoOfPartitionFuture = CompletableFuture.completedFuture(1);
 
+        ClientBuilder mockClientBuilder = Mockito.mock(ClientBuilder.class);
         Mockito.doReturn(mockClientBuilder).when(mockClientBuilder).serviceUrl(Mockito.anyString());
         Mockito.doReturn(mockClient).when(mockClientBuilder).build();
 
@@ -98,11 +100,12 @@ public class PulsarKafkaConsumerTest {
         pulsarKafkaConsumerSpy.poll(100);
         pulsarKafkaConsumerSpy.close();
 
-        Assert.assertEquals(kafkaHeaderValue,msg.getProperty(kafkaHeaderKey));
+        Assert.assertEquals(kafkaHeaderValue, msg.getProperty(kafkaHeaderKey));
         Mockito.verify(pulsarKafkaConsumerSpy).seekToEnd(anyCollection());
         Mockito.verify(consumer, Mockito.times(0)).acknowledgeCumulativeAsync(Mockito.any(MessageId.class));
-        Mockito.verify(hex, Mockito.times(1)).decodeHex(Hex.encodeHexString(header1.getBytes()));
+        Mockito.verify(Mockito.mock(Hex.class), Mockito.times(1)).decodeHex(Hex.encodeHexString(kafkaHeaderKey.getBytes()));
     }
+
 
 }
 

@@ -214,11 +214,11 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
     private SubscriptionInitialPosition getStrategy(final String strategy) {
         switch(strategy) {
-    	    case "earliest":
-    	        return SubscriptionInitialPosition.Earliest;
-    	    default:
+            case "earliest":
+                return SubscriptionInitialPosition.Earliest;
+            default:
                 return SubscriptionInitialPosition.Latest;
-    	}
+        }
     }
     
     @Override
@@ -391,8 +391,8 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
 
                 TopicPartition tp = new TopicPartition(topic, partition);
                 if (lastReceivedOffset.get(tp) == null && !unpolledPartitions.contains(tp)) {
-                	log.info("When polling offsets, invalid offsets were detected. Resetting topic partition {}", tp);
-                	resetOffsets(tp);
+                    log.info("When polling offsets, invalid offsets were detected. Resetting topic partition {}", tp);
+                    resetOffsets(tp);
                 }
 
                 K key = getKey(topic, msg);
@@ -413,6 +413,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                 if (msg.getProperties() != null) {
                     Headers headers = new RecordHeaders();
                     msg.getProperties().forEach((k, v) -> {
+                        // Kafka Specific Headers from the record
                         if (k.startsWith(MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX)) {
                             String originalKey = k.replace(MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX, "");
                             try {
@@ -421,6 +422,10 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                                 log.warn("Corrupted Header Key : {}", originalKey);
                                 throw new RuntimeException(e);
                             }
+                        } else {
+                            // Default headers injected by the PulsarKafkaProducerClient
+                            // For ex:KafkaMessageRouter.PARTITION_ID
+                            headers.add(k, v.getBytes());
                         }
                     });
                     consumerRecord = new ConsumerRecord<>(topic, partition, offset, timestamp, timestampType, -1L,
@@ -688,7 +693,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
     }
 
     private SubscriptionInitialPosition resetOffsets(final TopicPartition partition) {
-    	log.info("Resetting partition {} and seeking to {} position", partition, strategy);
+        log.info("Resetting partition {} and seeking to {} position", partition, strategy);
         if (strategy == SubscriptionInitialPosition.Earliest) {
             seekToBeginning(Collections.singleton(partition));
         } else {

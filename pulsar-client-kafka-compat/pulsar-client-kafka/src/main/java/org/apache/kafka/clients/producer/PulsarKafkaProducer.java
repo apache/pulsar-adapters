@@ -386,6 +386,9 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
             builder.property(KafkaMessageRouter.PARTITION_ID, Integer.toString(partition));
         }
 
+        // If record contains Headers,
+        // Prefix that with kafka.header.{keyName} to differentiate that these headers are from Kafka Record
+        // Encode the value with Hex
         if (record.headers() != null) {
             record.headers().forEach(header -> {
                 String key = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header.key();
