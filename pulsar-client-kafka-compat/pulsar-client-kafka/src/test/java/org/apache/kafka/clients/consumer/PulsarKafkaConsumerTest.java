@@ -19,7 +19,6 @@
 package org.apache.kafka.clients.consumer;
 
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyString;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
