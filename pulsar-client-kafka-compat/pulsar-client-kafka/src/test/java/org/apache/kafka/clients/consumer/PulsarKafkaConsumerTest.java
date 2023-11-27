@@ -102,7 +102,6 @@ public class PulsarKafkaConsumerTest {
         Assert.assertEquals(kafkaHeaderValue, msg.getProperty(kafkaHeaderKey));
         Mockito.verify(pulsarKafkaConsumerSpy).seekToEnd(anyCollection());
         Mockito.verify(consumer, Mockito.times(0)).acknowledgeCumulativeAsync(Mockito.any(MessageId.class));
-        Mockito.verify(Mockito.mock(Hex.class), Mockito.times(1)).decodeHex(Hex.encodeHexString(kafkaHeaderKey.getBytes()));
     }
 
 
