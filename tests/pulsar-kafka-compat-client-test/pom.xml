@@ -64,6 +64,12 @@
       <artifactId>pulsar-client-kafka</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.kafka</groupId>
+          <artifactId>kafka-clients</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
