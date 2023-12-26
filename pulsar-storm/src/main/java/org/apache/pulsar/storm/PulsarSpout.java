@@ -454,7 +454,7 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
 
         @Override
         public void unsubscribe() throws PulsarClientException {
-            consumer.unsubscribe();
+            consumer.unsubscribe(true);
         }
 
     }
