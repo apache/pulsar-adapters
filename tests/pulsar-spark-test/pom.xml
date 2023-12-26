@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.pulsar.tests</groupId>
         <artifactId>adapters-tests-parent</artifactId>
-        <version>2.11.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-spark-test</artifactId>
@@ -41,7 +41,7 @@
         <dependency>
           <groupId>org.apache.pulsar</groupId>
           <artifactId>pulsar-spark</artifactId>
-            <version>2.11.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
           <scope>test</scope>
         </dependency>
 
