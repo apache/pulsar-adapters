@@ -212,7 +212,8 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
             for (String topic : topics) {
                 // Create individual subscription on each partition, that way we can keep using the
                 // acknowledgeCumulative()
-                int numberOfPartitions = ((PulsarClientImpl) client).getNumberOfPartitions(topic).get();
+                int numberOfPartitions = ((PulsarClientImpl) client).getPartitionedTopicMetadata(topic, true, false)
+                        .thenApply(metadata -> metadata.partitions).get();
 
                 ConsumerBuilder<byte[]> consumerBuilder = PulsarConsumerKafkaConfig.getConsumerBuilder(client, properties);
                 consumerBuilder.subscriptionType(SubscriptionType.Failover);

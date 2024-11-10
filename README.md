@@ -34,11 +34,11 @@ mvn install
 In order to build this repository the linked Pulsar release must be released to Maven Central
 other wise you have to build it locally.
 
-For instance if this code depends on Pulsar 2.11.0 you have to build Pulsar 2.11.0 locally
+For instance if this code depends on Pulsar 3.0.7 you have to build Pulsar 3.0.7 locally
 
 ```
 git clone https://github.com/apache/pulsar
-git checkout v2.11.0
+git checkout v3.0.7
 mvn clean install -DskipTests
 ```
 
