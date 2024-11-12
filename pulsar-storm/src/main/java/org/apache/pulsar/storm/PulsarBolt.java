@@ -140,7 +140,7 @@ public class PulsarBolt extends BaseRichBolt implements IMetric {
                             } else {
                                 collector.ack(input);
                                 ++messagesSent;
-                                messageSizeSent += messageSizeToBeSent;
+                                messageSizeSent += ((TypedMessageBuilderImpl<byte[]>) msgBuilder).getContent().remaining();
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug("[{}] Message sent with id {}", boltId, msgId);
                                 }
