@@ -89,8 +89,8 @@
     <lombok.version>1.18.20</lombok.version>
     <puppycrawl.checkstyle.version>8.37</puppycrawl.checkstyle.version>
 
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
 
     <!--config keys to congiure test selection -->
     <include>**/Test*.java,**/*Test.java,**/*Tests.java,**/*TestCase.java</include>
