@@ -76,7 +76,6 @@
   </issueManagement>
 
   <properties>
-    <adapter.version>3.0.7</adapter.version>
     <pulsar.version>3.0.7</pulsar.version>
     <kafka-client.version>2.7.2</kafka-client.version>
     <storm.version>2.0.0</storm.version>
