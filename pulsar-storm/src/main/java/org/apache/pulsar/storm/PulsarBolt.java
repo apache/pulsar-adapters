@@ -128,8 +128,6 @@ public class PulsarBolt extends BaseRichBolt implements IMetric {
                     }
                     collector.ack(input);
                 } else {
-                    final long messageSizeToBeSent = ((TypedMessageBuilderImpl<byte[]>) msgBuilder).getContent()
-                            .remaining();
                     msgBuilder.sendAsync().handle((msgId, ex) -> {
                         synchronized (collector) {
                             if (ex != null) {
@@ -140,7 +138,7 @@ public class PulsarBolt extends BaseRichBolt implements IMetric {
                             } else {
                                 collector.ack(input);
                                 ++messagesSent;
-                                messageSizeSent += messageSizeToBeSent;
+                                messageSizeSent += ((TypedMessageBuilderImpl<byte[]>) msgBuilder).getContent().remaining();
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug("[{}] Message sent with id {}", boltId, msgId);
                                 }

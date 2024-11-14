@@ -87,7 +87,7 @@ public class PulsarKafkaProducerTest {
     @ObjectFactory
     // Necessary to make PowerMockito.mockStatic work with TestNG.
     public IObjectFactory getObjectFactory() {
-        return new org.powermock.modules.testng.PowerMockObjectFactory();
+        return new org.powermock.modules.testng.internal.PowerMockClassloaderObjectFactory();
     }
 
     @Test
