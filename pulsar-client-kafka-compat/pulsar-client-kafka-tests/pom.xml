@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.pulsar</groupId>
     <artifactId>pulsar-client-kafka-compat</artifactId>
-    <version>3.0.7</version>
+    <version>4.0.0</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -35,11 +35,6 @@
   <name>Pulsar Kafka compatibility :: Tests</name>
 
   <description>Tests to verify the correct shading configuration for the pulsar-client-kafka wrapper</description>
-
-  <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-  </properties>
 
   <dependencies>
     <dependency>

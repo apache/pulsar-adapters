@@ -71,21 +71,21 @@ jobs:
           distribution: 'adopt'
           java-version: 17
 
-      - name: install org.apache.pulsar.tests:integration:jar:tests:3.0.7
+      - name: install org.apache.pulsar.tests:integration:jar:tests:4.0.0
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
           cd ~
-          git clone --depth 50 --single-branch --branch v3.0.7  https://github.com/apache/pulsar
+          git clone --depth 50 --single-branch --branch v4.0.0  https://github.com/apache/pulsar
           cd pulsar
           mvn -B -ntp -f tests/pom.xml -pl org.apache.pulsar.tests:tests-parent,org.apache.pulsar.tests:integration install
 
       - name: build apachepulsar/pulsar-test-latest-version:latest
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
-          docker pull apachepulsar/pulsar-all:3.0.7
-          docker pull apachepulsar/pulsar:3.0.7
-          docker tag apachepulsar/pulsar-all:3.0.7 apachepulsar/pulsar-all:latest
-          docker tag apachepulsar/pulsar:3.0.7 apachepulsar/pulsar:latest
+          docker pull apachepulsar/pulsar-all:4.0.0
+          docker pull apachepulsar/pulsar:4.0.0
+          docker tag apachepulsar/pulsar-all:4.0.0 apachepulsar/pulsar-all:latest
+          docker tag apachepulsar/pulsar:4.0.0 apachepulsar/pulsar:latest
           cd ~/pulsar
           mvn -B -ntp -f tests/docker-images/pom.xml install -pl org.apache.pulsar.tests:latest-version-image -am -Pdocker,-main -DskipTests
 

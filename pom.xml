@@ -32,7 +32,7 @@
   <groupId>org.apache.pulsar</groupId>
   <artifactId>pulsar-adapters</artifactId>
 
-  <version>3.0.7</version>
+  <version>4.0.0</version>
 
   <name>Pulsar Adapters</name>
   <description>A collections of Pulsar adapters.</description>
@@ -76,7 +76,7 @@
   </issueManagement>
 
   <properties>
-    <pulsar.version>3.0.7</pulsar.version>
+    <pulsar.version>4.0.0</pulsar.version>
     <kafka-client.version>2.7.2</kafka-client.version>
     <storm.version>2.0.0</storm.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
@@ -123,7 +123,7 @@
     <surefire.version>3.0.0-M3</surefire.version>
     <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
-    <maven-shade-plugin>3.4.1</maven-shade-plugin>
+    <maven-shade-plugin>3.6.0</maven-shade-plugin>
     <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
     <nifi-nar-maven-plugin.version>1.2.0</nifi-nar-maven-plugin.version>
     <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
