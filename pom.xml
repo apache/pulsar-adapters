@@ -76,7 +76,7 @@
   </issueManagement>
 
   <properties>
-    <pulsar.version>4.0.0-SNAPSHOT</pulsar.version>
+    <pulsar.version>4.0.1</pulsar.version>
     <kafka-client.version>2.7.2</kafka-client.version>
     <storm.version>2.0.0</storm.version>
     <kafka_0_8.version>0.8.1.1</kafka_0_8.version>
