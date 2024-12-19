@@ -66,7 +66,7 @@ import org.apache.pulsar.client.impl.TopicMessageIdImpl;
 import org.apache.pulsar.client.kafka.compat.PulsarClientKafkaConfig;
 import org.apache.pulsar.client.kafka.compat.PulsarConsumerKafkaConfig;
 import org.apache.pulsar.client.kafka.compat.PulsarKafkaSchema;
-import org.apache.pulsar.client.util.ConsumerName;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.FutureUtil;
@@ -270,7 +270,7 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
                 consumerBuilder.subscriptionName(groupId);
                 if (numberOfPartitions > 1) {
                     // Subscribe to each partition
-                    consumerBuilder.consumerName(ConsumerName.generateRandomName());
+                    consumerBuilder.consumerName(RandomStringUtils.randomAlphanumeric(5));
                     for (int i = 0; i < numberOfPartitions; i++) {
                         String partitionName = TopicName.get(topic).getPartition(i).toString();
                         CompletableFuture<org.apache.pulsar.client.api.Consumer<byte[]>> future = consumerBuilder.clone()
