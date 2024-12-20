@@ -84,8 +84,8 @@ jobs:
         run: |
           docker pull apachepulsar/pulsar-all:4.0.1
           docker pull apachepulsar/pulsar:4.0.1
-          docker tag apachepulsar/pulsar-all:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git) apachepulsar/pulsar-all:latest
-          docker tag apachepulsar/pulsar:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git) apachepulsar/pulsar:latest
+          docker tag apachepulsar/pulsar-all:4.0.1 apachepulsar/pulsar-all:4.0.1-$(git rev-parse --short=7 HEAD)
+          docker tag apachepulsar/pulsar:4.0.1 apachepulsar/pulsar:4.0.1-$(git rev-parse --short=7 HEAD)
           cd ~/pulsar
           mvn -B -ntp -f tests/docker-images/pom.xml install -pl org.apache.pulsar.tests:latest-version-image -am -Pdocker,-main -DskipTests
 
