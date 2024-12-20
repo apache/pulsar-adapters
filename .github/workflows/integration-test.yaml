@@ -82,8 +82,8 @@ jobs:
       - name: build apachepulsar/pulsar-test-latest-version:latest
         if: ${{ steps.check_changes.outputs.docs_only != 'true' }}
         run: |
-          docker pull apachepulsar/pulsar-all:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git)
-          docker pull apachepulsar/pulsar:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git)
+          docker pull apachepulsar/pulsar-all:4.0.1
+          docker pull apachepulsar/pulsar:4.0.1
           docker tag apachepulsar/pulsar-all:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git) apachepulsar/pulsar-all:latest
           docker tag apachepulsar/pulsar:4.0.1-$(git rev-parse --short=7 HEAD 2>/dev/null || echo no-git) apachepulsar/pulsar:latest
           cd ~/pulsar
