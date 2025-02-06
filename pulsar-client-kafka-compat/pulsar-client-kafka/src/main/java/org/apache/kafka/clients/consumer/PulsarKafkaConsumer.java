@@ -522,7 +522,8 @@ public class PulsarKafkaConsumer<K, V> implements Consumer<K, V>, MessageListene
             lastCommittedOffset.put(tp, offsetAndMetadata);
             MessageId msgId = MessageIdUtils.getMessageId(offsetAndMetadata.offset());
             if (consumer instanceof MultiTopicsConsumerImpl) {
-                msgId = new TopicMessageIdImpl(topicPartition.topic(), tp.topic(), msgId);
+                String partitionName = TopicName.get(topicPartition.topic()).getPartition(topicPartition.partition()).toString();
+                msgId = new TopicMessageIdImpl(partitionName, tp.topic(), msgId);
             }
             futures.add(consumer.acknowledgeCumulativeAsync(msgId));
         });
