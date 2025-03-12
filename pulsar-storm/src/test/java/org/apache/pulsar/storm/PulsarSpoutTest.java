@@ -18,16 +18,7 @@
  */
 package org.apache.pulsar.storm;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -38,13 +29,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.pulsar.client.api.ClientBuilder;
-import org.apache.pulsar.client.api.Consumer;
-import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.Schema;
-import org.apache.pulsar.client.api.SubscriptionType;
+import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
 import org.apache.pulsar.client.impl.MessageImpl;
+import org.apache.pulsar.client.impl.conf.ClientConfigurationData;
+import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.storm.PulsarSpout.SpoutConsumer;
 import org.apache.storm.spout.SpoutOutputCollector;
@@ -96,6 +85,71 @@ public class PulsarSpoutTest {
         spout.ack(msg);
         spout.emitNextAvailableTuple();
         verify(consumer, atLeast(1)).receive(anyInt(), any());
+    }
+
+    @Test
+    public void testFailedMessageNegativeAck() throws Exception {
+        testFailedMessageRetryExhausted(true);
+    }
+
+    @Test
+    public void testFailedMessageAckAndDrop() throws Exception {
+        testFailedMessageRetryExhausted(false);
+    }
+
+
+    public void testFailedMessageRetryExhausted(boolean negativeAckFailedMessages) throws Exception {
+
+        PulsarSpoutConfiguration conf = new PulsarSpoutConfiguration();
+        conf.setServiceUrl("http://localhost:8080");
+        conf.setSubscriptionName("sub1");
+        conf.setTopic("persistent://prop/ns1/topic1");
+        conf.setSubscriptionType(SubscriptionType.Exclusive);
+        conf.setMaxFailedRetries(1);
+        conf.setNegativeAckFailedMessages(negativeAckFailedMessages);
+        conf.setMessageToValuesMapper(new MessageToValuesMapper() {
+            @Override
+            public Values toValues(Message<byte[]> msg) {
+                return null;
+            }
+
+            @Override
+            public void declareOutputFields(OutputFieldsDeclarer declarer) {
+            }
+
+        });
+
+        DeadLetterPolicy deadLetterPolicy = DeadLetterPolicy.builder()
+                .maxRedeliverCount(1)
+                .deadLetterTopic("persistent://prop/ns1/dl-topic-1")
+                .build();
+        ConsumerConfigurationData<byte[]> consumerConfig = new ConsumerConfigurationData<>();
+        consumerConfig.setDeadLetterPolicy(deadLetterPolicy);
+
+        ClientConfigurationData clientConfigurationData = spy(new ClientBuilderImpl()).getClientConfigurationData().clone();
+        PulsarSpout spout = spy(new PulsarSpout(conf, clientConfigurationData, consumerConfig));
+
+        Message<byte[]> msg = new MessageImpl<>(conf.getTopic(), "1:1", Maps.newHashMap(),
+                new byte[0], Schema.BYTES, new MessageMetadata());
+        Consumer<byte[]> consumer = mock(Consumer.class);
+        SpoutConsumer spoutConsumer = new SpoutConsumer(consumer);
+        doNothing().when(consumer).negativeAcknowledge(msg);
+
+        Field consField = PulsarSpout.class.getDeclaredField("consumer");
+        consField.setAccessible(true);
+        consField.set(spout, spoutConsumer);
+
+        spout.fail(msg);
+        spout.fail(msg);
+
+        if(negativeAckFailedMessages){
+            verify(consumer, atLeast(1)).negativeAcknowledge(msg);
+            verify(consumer, never()).acknowledgeAsync(msg);
+        } else {
+            verify(consumer, never()).negativeAcknowledge(msg);
+            verify(consumer, atLeast(1)).acknowledgeAsync(msg);
+        }
+
     }
 
     @Test

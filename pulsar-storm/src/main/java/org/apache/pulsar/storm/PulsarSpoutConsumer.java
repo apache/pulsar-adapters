@@ -43,6 +43,13 @@ public interface PulsarSpoutConsumer {
     void acknowledgeAsync(Message<?> msg);
 
     /**
+     * Negative ack the message.
+     *
+     * @param msg
+     */
+    void negativeAcknowledge(Message<?> msg);
+
+    /**
      * unsubscribe the consumer
      * @throws PulsarClientException 
      */

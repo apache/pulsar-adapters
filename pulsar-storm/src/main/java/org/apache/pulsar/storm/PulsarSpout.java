@@ -159,6 +159,21 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
         }
     }
 
+    public void negativeAck(Object msg) {
+        if (msg instanceof Message) {
+            Message<?> pulsarMsg = (Message<?>) msg;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[{}] Received negative ack for message {}", spoutId, pulsarMsg.getMessageId());
+            }
+            consumer.negativeAcknowledge(pulsarMsg);
+            pendingMessageRetries.remove(pulsarMsg.getMessageId());
+            // we should also remove message from failedMessages but it will be
+            // eventually removed while emitting next
+            // tuple
+            --pendingAcks;
+        }
+    }
+
     @Override
     public void fail(Object msgId) {
         if (msgId instanceof Message) {
@@ -183,8 +198,13 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
                 --pendingAcks;
                 messagesFailed++;
             } else {
-                LOG.warn("[{}] Number of retries limit reached, dropping the message {}", spoutId, id);
-                ack(msg);
+                if(pulsarSpoutConf.shouldNegativeAckFailedMessages()){
+                    LOG.warn("[{}] Number of retries limit reached, negative acking the message {}", spoutId, id);
+                    negativeAck(msg);
+                } else {
+                    LOG.warn("[{}] Number of retries limit reached, dropping the message {}", spoutId, id);
+                    ack(msg);
+                }
             }
         }
 
@@ -448,6 +468,11 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
         }
 
         @Override
+        public void negativeAcknowledge(Message<?> msg) {
+            consumer.negativeAcknowledge(msg);
+        }
+
+        @Override
         public void close() throws PulsarClientException {
             consumer.close();
         }
@@ -474,6 +499,11 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
 
         @Override
         public void acknowledgeAsync(Message<?> msg) {
+            // No-op
+        }
+
+        @Override
+        public void negativeAcknowledge(Message<?> msg) {
             // No-op
         }
 
