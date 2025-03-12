@@ -159,14 +159,14 @@ public class PulsarSpout extends BaseRichSpout implements IMetric {
         }
     }
 
-    public void negativeAck(Object msgId) {
-        if (msgId instanceof Message) {
-            Message<?> msg = (Message<?>) msgId;
+    public void negativeAck(Object msg) {
+        if (msg instanceof Message) {
+            Message<?> pulsarMsg = (Message<?>) msg;
             if (LOG.isDebugEnabled()) {
-                LOG.debug("[{}] Received negative ack for message {}", spoutId, msg.getMessageId());
+                LOG.debug("[{}] Received negative ack for message {}", spoutId, pulsarMsg.getMessageId());
             }
-            consumer.negativeAcknowledge(msg);
-            pendingMessageRetries.remove(msg.getMessageId());
+            consumer.negativeAcknowledge(pulsarMsg);
+            pendingMessageRetries.remove(pulsarMsg.getMessageId());
             // we should also remove message from failedMessages but it will be
             // eventually removed while emitting next
             // tuple
