@@ -18,6 +18,7 @@
  */
 package org.apache.kafka.clients.producer;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -36,7 +37,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
+import lombok.Getter;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.kafka.clients.constants.MessageConstants;
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Cluster;
@@ -63,10 +66,6 @@ import org.apache.pulsar.client.kafka.compat.PulsarProducerKafkaConfig;
 import org.apache.pulsar.client.util.MessageIdUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import lombok.Getter;
 
 public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
 
@@ -385,6 +384,17 @@ public class PulsarKafkaProducer<K, V> implements Producer<K, V> {
             // Get the partition id from the partitioner
             int partition = partitioner.partition(record.topic(), record.key(), keyBytes, record.value(), value, cluster);
             builder.property(KafkaMessageRouter.PARTITION_ID, Integer.toString(partition));
+        }
+
+        // If record contains Headers,
+        // Prefix that with kafka.header.{keyName} to differentiate that these headers are from Kafka Record
+        // Encode the value with Hex
+        if (record.headers() != null) {
+            record.headers().forEach(header -> {
+                String key = MessageConstants.KAFKA_MESSAGE_HEADER_PREFIX + header.key();
+                builder.property(key, Hex.encodeHexString(header.value()));
+                log.debug("Formatted Kafka Specific Headers Before : {}, After : {}", header.key(), key);
+            });
         }
 
         return value.length;

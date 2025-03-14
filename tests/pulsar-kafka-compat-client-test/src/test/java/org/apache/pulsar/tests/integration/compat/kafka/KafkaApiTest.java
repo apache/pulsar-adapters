@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -20,7 +20,6 @@ package org.apache.pulsar.tests.integration.compat.kafka;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,25 +30,23 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import lombok.Cleanup;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.avro.reflect.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.PulsarKafkaConsumer;
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.PulsarKafkaProducer;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -62,6 +59,7 @@ import org.apache.pulsar.client.api.schema.SchemaDefinition;
 import org.apache.pulsar.client.impl.schema.AvroSchema;
 import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.apache.pulsar.client.impl.schema.StringSchema;
+import org.apache.pulsar.client.kafka.compat.KafkaMessageRouter;
 import org.apache.pulsar.client.kafka.compat.PulsarKafkaSchema;
 import org.apache.pulsar.tests.integration.suites.PulsarStandaloneTestSuite;
 import org.testng.Assert;
@@ -100,7 +98,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         producerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
         producerProperties.put("key.serializer", IntegerSerializer.class.getName());
         producerProperties.put("value.serializer", StringSerializer.class.getName());
-        Producer<Integer, String> producer = new KafkaProducer<>(producerProperties);
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(producerProperties);
 
         Properties consumerProperties = new Properties();
         consumerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
@@ -108,7 +106,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         consumerProperties.put("key.deserializer", IntegerDeserializer.class.getName());
         consumerProperties.put("value.deserializer", StringDeserializer.class.getName());
         consumerProperties.put("enable.auto.commit", "true");
-        Consumer<Integer, String> consumer = new KafkaConsumer<>(consumerProperties);
+        Consumer<Integer, String> consumer = new PulsarKafkaConsumer<>(consumerProperties);
         consumer.subscribe(Arrays.asList(topic));
 
         List<Long> offsets = new ArrayList<>();
@@ -151,7 +149,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
 
         @Cleanup
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
@@ -172,7 +170,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
                     String key = Integer.toString(received.get());
                     String value = "hello-" + received.get();
                     log.info("Receive record : key = {}, value = {}, topic = {}, ptn = {}",
-                        key, value, record.topic(), record.partition());
+                            key, value, record.topic(), record.partition());
                     assertEquals(record.key(), key);
                     assertEquals(record.value(), value);
 
@@ -195,7 +193,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
 
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
@@ -219,7 +217,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         consumer.close();
 
         // Re-open consumer and verify every message was acknowledged
-        Consumer<String, String> consumer2 = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer2 = new PulsarKafkaConsumer<>(props);
         consumer2.subscribe(Arrays.asList(topic));
 
         ConsumerRecords<String, String> records = consumer2.poll(100);
@@ -238,7 +236,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
 
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
@@ -268,7 +266,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         consumer.close();
 
         // Re-open consumer and verify every message was acknowledged
-        Consumer<String, String> consumer2 = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer2 = new PulsarKafkaConsumer<>(props);
         consumer2.subscribe(Arrays.asList(topic));
 
         ConsumerRecords<String, String> records = consumer2.poll(100);
@@ -300,7 +298,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         // Create 2 Kakfa consumer and verify each gets half of the messages
         List<Consumer<String, String>> consumers = new ArrayList<>();
         for (int c = 0; c < 2; c++) {
-            Consumer<String, String> consumer = new KafkaConsumer<>(props);
+            Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
             consumer.subscribe(Arrays.asList(topic));
             consumers.add(consumer);
         }
@@ -314,7 +312,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         consumers.forEach(consumer -> {
             int expectedMessaged = N / consumers.size();
 
-            for (int i = 0; i < expectedMessaged;) {
+            for (int i = 0; i < expectedMessaged; ) {
                 ConsumerRecords<String, String> records = consumer.poll(100);
                 i += records.count();
             }
@@ -342,7 +340,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         producerProperties.put("value.serializer", StringSerializer.class.getName());
 
         @Cleanup
-        Producer<Integer, String> producer = new KafkaProducer<>(producerProperties);
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(producerProperties);
 
         Properties props = new Properties();
         props.put("bootstrap.servers", getPlainTextServiceUrl());
@@ -353,7 +351,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
 
         // Create Kakfa consumer and verify all messages came from intended partition
         @Cleanup
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         int N = 8 * 3;
@@ -366,7 +364,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
 
         producer.flush();
 
-        for (int i = 0; i < N;) {
+        for (int i = 0; i < N; ) {
             ConsumerRecords<String, String> records = consumer.poll(100);
             i += records.count();
 
@@ -395,7 +393,8 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         }
 
         @Override
-        public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+        public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes,
+                             Cluster cluster) {
             // Dummy implementation that always return same partition
             return USED_PARTITION;
         }
@@ -417,7 +416,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         producerProperties.put("partitioner.class", MyCustomPartitioner.class.getName());
 
         @Cleanup
-        Producer<Integer, String> producer = new KafkaProducer<>(producerProperties);
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(producerProperties);
 
         Properties props = new Properties();
         props.put("bootstrap.servers", getPlainTextServiceUrl());
@@ -428,7 +427,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
 
         // Create Kakfa consumer and verify all messages came from intended partition
         @Cleanup
-        Consumer<Integer, String> consumer = new KafkaConsumer<>(props);
+        Consumer<Integer, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         int N = 8 * 3;
@@ -439,7 +438,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
 
         producer.flush();
 
-        for (int i = 0; i < N;) {
+        for (int i = 0; i < N; ) {
             ConsumerRecords<Integer, String> records = consumer.poll(100);
             i += records.count();
 
@@ -465,7 +464,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("pulsar.consumer.acknowledgments.group.time.millis", "0");
 
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
@@ -522,7 +521,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("pulsar.consumer.acknowledgments.group.time.millis", "0");
 
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
+        Consumer<String, String> consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
@@ -552,7 +551,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         consumer.close();
 
         // Recreate the consumer
-        consumer = new KafkaConsumer<>(props);
+        consumer = new PulsarKafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
 
         ConsumerRecords<String, String> records = consumer.poll(100);
@@ -578,7 +577,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("key.serializer", IntegerSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
 
-        Producer<Integer, String> producer = new KafkaProducer<>(props);
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(props);
 
         for (int i = 0; i < 10; i++) {
             producer.send(new ProducerRecord<Integer, String>(topic, i, "hello-" + i));
@@ -611,7 +610,7 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("key.serializer", IntegerSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
 
-        Producer<Integer, String> producer = new KafkaProducer<>(props);
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(props);
 
         CountDownLatch counter = new CountDownLatch(10);
 
@@ -644,15 +643,15 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         PulsarClient pulsarClient = PulsarClient.builder().serviceUrl(getPlainTextServiceUrl()).build();
         org.apache.pulsar.client.api.Consumer<byte[]> pulsarConsumer =
                 pulsarClient.newConsumer()
-                .topic(topic)
-                .subscriptionName("my-subscription")
-                .subscribe();
+                        .topic(topic)
+                        .subscriptionName("my-subscription")
+                        .subscribe();
         Properties props = new Properties();
         props.put("bootstrap.servers", getPlainTextServiceUrl());
         props.put("key.serializer", IntegerSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
 
-        Producer<Bar, Foo> producer = new KafkaProducer<>(props, barSchema, fooSchema);
+        Producer<Bar, Foo> producer = new PulsarKafkaProducer<>(props, barSchema, fooSchema);
         for (int i = 0; i < 10; i++) {
             Bar bar = new Bar();
             bar.setField1(true);
@@ -691,12 +690,13 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
 
         @Cleanup
-        Consumer<String, Foo> consumer = new KafkaConsumer<String, Foo>(props, new StringSchema(), fooSchema);
+        Consumer<String, Foo> consumer = new PulsarKafkaConsumer<String, Foo>(props, new StringSchema(), fooSchema);
         consumer.subscribe(Arrays.asList(topic));
 
         @Cleanup
         PulsarClient pulsarClient = PulsarClient.builder().serviceUrl(getPlainTextServiceUrl()).build();
-        org.apache.pulsar.client.api.Producer<Foo> pulsarProducer = pulsarClient.newProducer(fooSchema).topic(topic).create();
+        org.apache.pulsar.client.api.Producer<Foo> pulsarProducer =
+                pulsarClient.newProducer(fooSchema).topic(topic).create();
 
         for (int i = 0; i < 10; i++) {
             Foo foo = new Foo();
@@ -741,10 +741,10 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
 
         @Cleanup
-        Consumer<Bar, Foo> consumer = new KafkaConsumer<>(props, barSchema, fooSchema);
+        Consumer<Bar, Foo> consumer = new PulsarKafkaConsumer<>(props, barSchema, fooSchema);
         consumer.subscribe(Arrays.asList(topic));
 
-        Producer<Bar, Foo> producer = new KafkaProducer<>(props, barSchema, fooSchema);
+        Producer<Bar, Foo> producer = new PulsarKafkaProducer<>(props, barSchema, fooSchema);
 
         for (int i = 0; i < 10; i++) {
             Bar bar = new Bar();
@@ -795,10 +795,10 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
 
         @Cleanup
-        Consumer<Bar, Foo> consumer = new KafkaConsumer<>(props, barSchema, fooSchema);
+        Consumer<Bar, Foo> consumer = new PulsarKafkaConsumer<>(props, barSchema, fooSchema);
         consumer.subscribe(Arrays.asList(topic));
 
-        Producer<Bar, Foo> producer = new KafkaProducer<>(props, barSchema, fooSchema);
+        Producer<Bar, Foo> producer = new PulsarKafkaProducer<>(props, barSchema, fooSchema);
 
         for (int i = 0; i < 10; i++) {
             Bar bar = new Bar();
@@ -849,10 +849,10 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
         props.put("value.deserializer", StringDeserializer.class.getName());
 
         @Cleanup
-        Consumer<String, Foo> consumer = new KafkaConsumer<>(props, keySchema, valueSchema);
+        Consumer<String, Foo> consumer = new PulsarKafkaConsumer<>(props, keySchema, valueSchema);
         consumer.subscribe(Arrays.asList(topic));
 
-        Producer<String, Foo> producer = new KafkaProducer<>(props, keySchema, valueSchema);
+        Producer<String, Foo> producer = new PulsarKafkaProducer<>(props, keySchema, valueSchema);
 
         for (int i = 0; i < 10; i++) {
             Foo foo = new Foo();
@@ -881,5 +881,60 @@ public class KafkaApiTest extends PulsarStandaloneTestSuite {
                 consumer.commitSync();
             }
         }
+    }
+
+    @Test
+    public void testProducerConsumerHeadersWithPulsarKafkaClient() throws Exception {
+        String topic = "persistent://public/default/testProduceAndConsumeWithHeaders";
+
+        Properties producerProperties = new Properties();
+        producerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
+        producerProperties.put("key.serializer", IntegerSerializer.class.getName());
+        producerProperties.put("value.serializer", StringSerializer.class.getName());
+        Producer<Integer, String> producer = new PulsarKafkaProducer<>(producerProperties);
+
+        Properties consumerProperties = new Properties();
+        consumerProperties.put("bootstrap.servers", getPlainTextServiceUrl());
+        consumerProperties.put("group.id", "my-subscription-name");
+        consumerProperties.put("key.deserializer", IntegerDeserializer.class.getName());
+        consumerProperties.put("value.deserializer", StringDeserializer.class.getName());
+        consumerProperties.put("enable.auto.commit", "true");
+        Consumer<Integer, String> consumer = new PulsarKafkaConsumer<>(consumerProperties);
+        consumer.subscribe(Arrays.asList(topic));
+
+        List<Long> offsets = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            Headers headers = new RecordHeaders();
+            String header = "header" + i;
+            headers.add(header, header.getBytes());
+            RecordMetadata md =
+                    producer.send(new ProducerRecord<>(topic, 1, i, "hello-" + i, headers)).get();
+            offsets.add(md.offset());
+            log.info("Published message at {}", Long.toHexString(md.offset()));
+        }
+
+        producer.flush();
+        producer.close();
+
+        AtomicInteger received = new AtomicInteger();
+        while (received.get() < 10) {
+            ConsumerRecords<Integer, String> records = consumer.poll(100);
+            records.forEach(record -> {
+                assertEquals(record.key().intValue(), received.get());
+                assertEquals(record.value(), "hello-" + received.get());
+                assertEquals(record.offset(), offsets.get(received.get()).longValue());
+                assertEquals(record.headers().lastHeader("header" + record.key()).key(), "header" + record.key());
+                assertEquals(new String(record.headers().lastHeader("header" + record.key()).value()),
+                        "header" + record.key());
+                assertEquals(new String(record.headers().lastHeader(KafkaMessageRouter.PARTITION_ID).value()),"1");
+
+                received.incrementAndGet();
+            });
+
+            consumer.commitSync();
+        }
+
+        consumer.close();
     }
 }
